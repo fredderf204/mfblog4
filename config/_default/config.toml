@@ -2,7 +2,7 @@
 baseurl = "https://fredderf204.github.io/mfblog4"
 languageCode = "en-us"
 paginate = 5
-title = "Hugo Theme Stack Starter"
+title = "Cloud Blog"
 
 # Theme i18n support
 # Available values: en, fr, id, ja, ko, pt-br, zh-cn, zh-tw, es, de, nl, it, th, el, uk, ar
