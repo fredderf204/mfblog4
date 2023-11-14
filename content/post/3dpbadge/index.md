@@ -13,7 +13,7 @@ I've been toying with the idea of making a custom event badge for a while now, a
 
 The reason being is that I love connecting with people, but I hate constantly getting my phone out of my pocket to show my Linkedin QR code. So I thought it would be cool to have a badge with a QR code on it that people could scan, get my details and connect on Linkedin 😎
 
-### TLDR
+## TLDR
 
 * Take a screenshot of your LinkedIn QR code.
 * Convert it to a SVG image. I used [Adobe jpg-to-svg](https://www.adobe.com/express/feature/image/convert/jpg-to-svg).
@@ -23,7 +23,7 @@ The reason being is that I love connecting with people, but I hate constantly ge
 
 >❗The last step requires a 3d printer.
 
-### Getting your LinkedIn QR code
+## Getting your LinkedIn QR code
 
 This process wasn't too difficult, but it was a bit of a pain. I'm sure there's a better way to do it, but this is what I did.
 
@@ -36,11 +36,11 @@ This process wasn't too difficult, but it was a bit of a pain. I'm sure there's 
 
 ![QR code](1.jpg)
 
-### Converting the QR code to a SVG
+## Converting the QR code to a SVG
 
 I used [Adobe jpg-to-svg](https://www.adobe.com/express/feature/image/convert/jpg-to-svg) to convert the QR code to a SVG image. It's a free online tool that does the job well. Not too much to see about this process, just upload the image and download the SVG.
 
-### Converting the SVG to a STL
+## Converting the SVG to a STL
 
 I used [imagetostl](https://imagetostl.com/convert/file/svg/to/stl) to convert the SVG to a STL file. It's a free online tool that does the job well.
 
@@ -56,7 +56,7 @@ The reason we are converting this file into a STL, is so I can import it into [T
 
 ![imagetostl](3.jpg)
 
-### Making the badge
+## Making the badge
 
 I used [Tinkercad](https://www.tinkercad.com/) to make the badge. I find Tinkercad to be the easiest 3d modelling tool to use, but you can use whatever you like. I have tried other (Blender, Fusion 360, etc) but I find them to be too complicated for my needs.
 
@@ -74,7 +74,7 @@ I used [Tinkercad](https://www.tinkercad.com/) to make the badge. I find Tinkerc
 
 ![Tinkercad](4.jpg)
 
-### Printing the badge
+## Printing the badge
 
 >💡Tip: The printing process will vary depending on what 3d printer you have. I have a Bambu Lab P1P and the Bambu Lab AMS, which means I can print in multiple colours. I printed the card in white and the QR code and lettering in black.
 
@@ -90,7 +90,7 @@ and 27 minutes later, you have your event badge!
 
 ![Badge](6.jpg)
 
-### Conclusion
+## Conclusion
 
 I'm really happy with how the badge turned out. I've already used it at a few events and it's been a great conversation starter. I've also had a few people ask me how I made it, so I thought I would write this blog post to share the process.
 
