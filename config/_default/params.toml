@@ -76,7 +76,7 @@ enabled = true
 ## Comments
 [comments]
 enabled = true
-provider = "disqus"
+provider = "giscus"
 
 [comments.disqusjs]
 shortname = ""
@@ -127,13 +127,13 @@ serverName = "cactus.chat"
 siteName = ""
 
 [comments.giscus]
-repo = ""
-repoID = ""
-category = ""
-categoryID = ""
-mapping = ""
-lightTheme = ""
-darkTheme = ""
+repo = "fredderf204/mfblog4-giscus"
+repoID = "R_kgDOK5HFPw"
+category = "Announcements"
+categoryID = "DIC_kwDOK5HFP84Cbspg"
+mapping = "pathname"
+lightTheme = "preferred_color_scheme"
+darkTheme = "preferred_color_scheme"
 reactionsEnabled = 1
 emitMetadata = 0
 
