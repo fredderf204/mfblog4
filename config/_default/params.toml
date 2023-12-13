@@ -132,8 +132,8 @@ repoID = "R_kgDOK5HFPw"
 category = "Announcements"
 categoryID = "DIC_kwDOK5HFP84Cbspg"
 mapping = "pathname"
-lightTheme = "preferred_color_scheme"
-darkTheme = "preferred_color_scheme"
+lightTheme = "light"
+darkTheme = "dark"
 reactionsEnabled = 1
 emitMetadata = 0
 
