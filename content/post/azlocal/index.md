@@ -1,6 +1,6 @@
 ---
 title: "Running Azure Functions locally"
-description: 
+description: "Running Azure Functions locally using VS Code and Azure Functions extension"
 date: 2023-11-13T16:44:06+11:00
 image: cover.jpg
 hidden: false

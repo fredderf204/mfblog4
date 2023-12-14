@@ -1,6 +1,6 @@
 ---
 title: "AI Generated Azure News Summary"
-description: 
+description: "Azure Function centred process that takes news articles from places like Azure Feeds and creates a summary of them using Azure Open AI"
 date: 2023-11-24T15:46:04+11:00
 image: cover.jpg
 math: 
