@@ -1,0 +1,692 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Azure Blog</title><link>https://fredderf204.github.io/mfblog4/</link><description>Recent content on Azure Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 14 Dec 2023 13:27:03 +1100</lastBuildDate><atom:link href="https://fredderf204.github.io/mfblog4/index.xml" rel="self" type="application/rss+xml"/><item><title>Using SSML with Azure AI Speech service</title><link>https://fredderf204.github.io/mfblog4/p/using-ssml-with-azure-ai-speech-service/</link><pubDate>Thu, 14 Dec 2023 13:27:03 +1100</pubDate><guid>https://fredderf204.github.io/mfblog4/p/using-ssml-with-azure-ai-speech-service/</guid><description>&lt;img src="https://fredderf204.github.io/mfblog4/p/using-ssml-with-azure-ai-speech-service/cover.jpeg" alt="Featured image of post Using SSML with Azure AI Speech service" />&lt;p>I have recently created a webpage that takes news articles from places like &lt;a class="link" href="https://azurefeeds.com/" target="_blank" rel="noopener"
+>Azure Feeds&lt;/a> and creates a daily summary of them using &lt;a class="link" href="https://azure.microsoft.com/en-us/products/ai-services/openai-service" target="_blank" rel="noopener"
+>Azure Open AI&lt;/a>, which you can read about &lt;a class="link" href="https://fredderf204.github.io/mfblog4/p/ai-generated-azure-news-summary/" target="_blank" rel="noopener"
+>here&lt;/a>. But I want to make these summaries multi-modal and have them read out to me, so I can listen to them on the go. So I thought I&amp;rsquo;d use &lt;a class="link" href="https://azure.microsoft.com/en-us/services/cognitive-services/speech-services/" target="_blank" rel="noopener"
+>Azure AI Speech&lt;/a> to convert the text to speech.&lt;/p>
+&lt;h2 id="tldr">TLDR&lt;/h2>
+&lt;ul>
+&lt;li>What is Azure AI Speech service&lt;/li>
+&lt;li>What is SSML&lt;/li>
+&lt;li>How to use SSML with Azure AI Speech service&lt;/li>
+&lt;li>Sample code&lt;/li>
+&lt;/ul>
+&lt;h2 id="what-is-azure-ai-speech-service">What is Azure AI Speech service&lt;/h2>
+&lt;p>&lt;a class="link" href="https://azure.microsoft.com/en-us/services/cognitive-services/speech-services/" target="_blank" rel="noopener"
+>Azure AI Speech&lt;/a> is a collection of speech-to-text and text-to-speech APIs that enables developers to add speech capabilities to their applications. It supports 125 languages and variants, and 60+ standard and custom voice fonts.&lt;/p>
+&lt;h2 id="what-is-ssml">What is SSML&lt;/h2>
+&lt;p>&lt;a class="link" href="https://www.w3.org/TR/speech-synthesis/" target="_blank" rel="noopener"
+>Speech Synthesis Markup Language (SSML)&lt;/a> is an XML-based markup language that provides a standard way to mark up text for the generation of synthetic speech. SSML is a W3C specification that is supported by all major speech synthesis engines.&lt;/p>
+&lt;p>Microsoft has a great article &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup" target="_blank" rel="noopener"
+>here&lt;/a> on SSML and it&amp;rsquo;s primary use cases.&lt;/p>
+&lt;ul>
+&lt;li>Controlling pronunciation&lt;/li>
+&lt;li>Choosing the voice&lt;/li>
+&lt;li>Define the input text structure&lt;/li>
+&lt;/ul>
+&lt;p>Controlling the pronunciation can bee really useful if you work in a domain/industry that has a lot of acronyms or jargon. For example, I work in the IT industry and Microsoft, where there are a lot of acronyms. So I can use SSML to tell Azure AI Speech how to pronounce them correctly.&lt;/p>
+&lt;p>Choosing the voice is almost my favourite part. I love looking through the catalog of voices and choosing the one that I like the most. For the Azure AI Speech service, you can choose from 60+ standard and custom voice fonts. To find out what standard voices are available in your region, you can run the below command in your shell;&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">curl --location --request GET &lt;span class="s1">&amp;#39;https://southeastasia.tts.speech.microsoft.com/cognitiveservices/voices/list&amp;#39;&lt;/span> &lt;span class="se">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="se">&lt;/span>--header &lt;span class="s1">&amp;#39;Ocp-Apim-Subscription-Key: xxxx-yyyy-zzzz&amp;#39;&lt;/span> &lt;span class="p">|&lt;/span> jq &lt;span class="s1">&amp;#39;.[] | select(.Locale | contains (&amp;#34;en-NZ&amp;#34;))&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>The above command sends a GET request to &lt;a class="link" href="https://southeastasia.tts.speech.microsoft.com/cognitiveservices/voices/list" target="_blank" rel="noopener"
+>https://southeastasia.tts.speech.microsoft.com/cognitiveservices/voices/list&lt;/a>, then pipes the output to jq, which is a lightweight and flexible command-line JSON processor. The jq command filters the output to only show the voices that are available in the en-NZ locale.&lt;/p>
+&lt;p>Please replace southeastasia with the region that you have deployed your Speech service to and replace the Ocp-Apim-Subscription-Key with your key. You can find your key in the Azure portal under your Speech service resource.&lt;/p>
+&lt;p>You can also change the locale to the one that you want to use and you will get a list of voices that are available for you to use.&lt;/p>
+&lt;blockquote>
+&lt;p>💎 And what&amp;rsquo;s even better, you can train a custom neural voice if you wish &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/custom-neural-voice" target="_blank" rel="noopener"
+>https://learn.microsoft.com/en-us/azure/ai-services/speech-service/custom-neural-voice&lt;/a> or create a personal AI generated replication of your voice &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/personal-voice-overview" target="_blank" rel="noopener"
+>https://learn.microsoft.com/en-us/azure/ai-services/speech-service/personal-voice-overview&lt;/a>.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="how-to-use-ssml-with-azure-ai-speech-service">How to use SSML with Azure AI Speech service&lt;/h2>
+&lt;p>I am new to Azure AI Speech service and SSML. The best way I have found to interact with Azure AI Speech service is to use the &lt;a class="link" href="https://speech.microsoft.com/" target="_blank" rel="noopener"
+>Speech Studio&lt;/a>. Once in there find the Text to speech section, then select Audio Content creation.&lt;/p>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/using-ssml-with-azure-ai-speech-service/1.jpg"
+width="1148"
+height="634"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/using-ssml-with-azure-ai-speech-service/1_hufc8bbd634c74e2cc74d3ce9fa4b2f5ab_95803_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/using-ssml-with-azure-ai-speech-service/1_hufc8bbd634c74e2cc74d3ce9fa4b2f5ab_95803_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Speech Studio"
+class="gallery-image"
+data-flex-grow="181"
+data-flex-basis="434px"
+>&lt;/p>
+&lt;p>Next you can create a new file or folder. Click on new Text file.&lt;/p>
+&lt;p>Once in the editor you can enter your text and then select the voice that you want to use. At this point, if you don&amp;rsquo;t want to use SSML you don&amp;rsquo;t have to. You can just use the default experience and happily create an audio file from text. But if you want to use SSML, you can click on the SSML button and enter your SSML code.&lt;/p>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/using-ssml-with-azure-ai-speech-service/2.jpg"
+width="1182"
+height="654"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/using-ssml-with-azure-ai-speech-service/2_huc31afd7b2dd1cca5065ad400ac6f74cc_74449_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/using-ssml-with-azure-ai-speech-service/2_huc31afd7b2dd1cca5065ad400ac6f74cc_74449_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Speech Studio"
+class="gallery-image"
+data-flex-grow="180"
+data-flex-basis="433px"
+>&lt;/p>
+&lt;p>Once you have entered your SSML code, you can click on the play button to hear what it sounds like. If you are happy with it, you can then click on the export button to download the audio file, plain text or the SSML code .&lt;/p>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/using-ssml-with-azure-ai-speech-service/3.jpg"
+width="1176"
+height="661"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/using-ssml-with-azure-ai-speech-service/3_hu0b87723bf2c7b119ed596c13e944b483_127411_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/using-ssml-with-azure-ai-speech-service/3_hu0b87723bf2c7b119ed596c13e944b483_127411_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Speech Studio"
+class="gallery-image"
+data-flex-grow="177"
+data-flex-basis="426px"
+>&lt;/p>
+&lt;h2 id="sample-code">Sample code&lt;/h2>
+&lt;p>Now that I have some familiarity with Azure AI Speech service and SSML, I can now use it in my code. I have created a simple Python script that takes a string as input and converts it to an audio file using Azure AI Speech service. It then saves the audio into Azure BLOB storage as an MP3.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">azure.cognitiveservices.speech&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">speechsdk&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">azure.storage.blob&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">BlobServiceClient&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">BlobClient&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ContainerClient&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ContentSettings&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Connect to Azure BLOB storage&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">storageaccount&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s1">&amp;#39;DefaultEndpointsProtocol=https;AccountName=aaa-bbb-ccc;AccountKey=xxx-yyy-zzz==;EndpointSuffix=core.windows.net&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">blob_service_client&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">BlobServiceClient&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_connection_string&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">storageaccount&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Creates an instance of a speech config with specified subscription key and service region.&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">speech_key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">service_region&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;ddd-eee-fff&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;australiaeast&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">speech_config&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speechsdk&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">SpeechConfig&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">subscription&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">speech_key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">region&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">service_region&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Create ssml string&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ssml_string&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s1">&amp;#39;&amp;#39;&amp;#39;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;lt;speak xmlns=&amp;#34;http://www.w3.org/2001/10/synthesis&amp;#34; xmlns:mstts=&amp;#34;http://www.w3.org/2001/mstts&amp;#34; xmlns:emo=&amp;#34;http://www.w3.org/2009/10/emotionml&amp;#34; version=&amp;#34;1.0&amp;#34; xml:lang=&amp;#34;en-US&amp;#34;&amp;gt;&amp;lt;voice name=&amp;#34;en-US-GuyNeural&amp;#34;&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;mstts:express-as style=&amp;#34;newscast&amp;#34;&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">Hello and welcome to the daily AI Generated News Summary for Thursday 8th December 2024 . I&amp;#39;m your host Guy and here are today&amp;#39;s headlines
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;lt;/mstts:express-as&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;/voice&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;lt;voice name=&amp;#34;en-US-JennyNeural&amp;#34;&amp;gt;&amp;lt;mstts:express-as style=&amp;#34;newscast&amp;#34;&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">Thanks Guy. I&amp;#39;m Jenny and today we have a new article by azurefeeds entitled hello
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;lt;/mstts:express-as&amp;gt;&amp;lt;/voice&amp;gt;&amp;lt;/speak&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;#39;&amp;#39;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Send string to Azure speech service&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">speech_synthesizer&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speechsdk&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">SpeechSynthesizer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">speech_config&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">speech_config&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">audio_config&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">result&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speech_synthesizer&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">speak_ssml&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ssml_string&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Get audio data&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">audio_data&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">result&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">audio_data&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Upload audio to Azure BLOB storage&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">mp3upload&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">blob_service_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_blob_client&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">container&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20231211&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">blob&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">today&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s1">&amp;#39;.mp3&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">mp3upload&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">upload_blob&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">audio_data&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">overwrite&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">content_settings&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ContentSettings&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">content_type&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;audio/mpeg&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;blockquote>
+&lt;p>💎 To test out this code, you can create the SSML in the Speech Studio and then copy and paste it the SSML into the ssml_string variable.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="how-am-i-using-this">How am I using this&lt;/h2>
+&lt;p>I have added this process into my Azure Function that creates the daily summary of Azure news. As you can see above, I tried to make it sound like a News desk by having a host (Guy) and a presenter (Jenny). So in my code, I have Guy do a little intro, then I have Jenny read all of the articles, then I have Guy do a little outro. You can see my full code here: &lt;a class="link" href="https://github.com/fredderf204/ai-gen-news-summary/blob/main/html-email/__init__.py" target="_blank" rel="noopener"
+>https://github.com/fredderf204/ai-gen-news-summary/blob/main/html-email/&lt;strong>init&lt;/strong>.py&lt;/a> and I have a put a snippet below;&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">blob_service_client&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">BlobServiceClient&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_connection_string&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">storageaccount&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">today&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">datetime&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">today&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">strftime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;%Y%m&lt;/span>&lt;span class="si">%d&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">dow&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">datetime&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">now&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">strftime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;%A&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">dateword&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">datetime&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">now&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">strftime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;%B &lt;/span>&lt;span class="si">%d&lt;/span>&lt;span class="s1">, %Y&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">container_client&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">blob_service_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_container_client&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">today&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ssml_string&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;&amp;lt;speak xmlns=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">http://www.w3.org/2001/10/synthesis&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2"> xmlns:mstts=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">http://www.w3.org/2001/mstts&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2"> xmlns:emo=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">http://www.w3.org/2009/10/emotionml&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2"> version=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">1.0&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2"> xml:lang=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">en-US&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;&amp;lt;voice name=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">en-US-GuyNeural&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;mstts:express-as style=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">newscast&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;Hello and welcome to the daily AI Generated News Summary for &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">dow&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s2">&amp;#34; &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">dateword&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s2">&amp;#34;. I&amp;#39;m your host Guy&amp;lt;/mstts:express-as&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;/voice&amp;gt;&amp;lt;voice name=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">en-US-JennyNeural&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;&amp;lt;mstts:express-as style=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">newscast&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;And I&amp;#39;m Jenny. Here are your headlines for today.&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">bloblist&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">container_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">list_blobs&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">blob&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">bloblist&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">logging&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">blob&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">blob_client&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">container_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_blob_client&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">blob&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">downloader&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">blob_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">download_blob&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">max_concurrency&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">encoding&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;UTF-8&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">blob_text&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">downloader&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">readall&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">blob_text_json&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">json&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">loads&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">blob_text&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ssml_string&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="s2">&amp;#34;The next article is entitled &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">blob_text_json&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;title&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s2">&amp;#34; and was published on &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">blob_text_json&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;author&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s2">&amp;#34;. Here is the summary &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">blob_text_json&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;summary&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ssml_string&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="s1">&amp;#39;&amp;lt;/mstts:express-as&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;/voice&amp;gt;&amp;lt;voice name=&amp;#34;en-US-GuyNeural&amp;#34;&amp;gt;&amp;lt;mstts:express-as style=&amp;#34;newscast&amp;#34;&amp;gt;Thanks Jenny. That&lt;/span>&lt;span class="se">\&amp;#39;&lt;/span>&lt;span class="s1">s all from the news desk today. Thanks for listening and have a great day.&amp;lt;/mstts:express-as&amp;gt;&amp;lt;/voice&amp;gt;&amp;lt;/speak&amp;gt;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">speech_config&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speechsdk&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">SpeechConfig&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">subscription&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">speech_key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">region&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">service_region&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">speech_synthesizer&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speechsdk&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">SpeechSynthesizer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">speech_config&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">speech_config&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">audio_config&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">result&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speech_synthesizer&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">speak_ssml&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ssml_string&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">audio_data&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">result&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">audio_data&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mp3upload&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">blob_service_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_blob_client&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">container&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">today&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">blob&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">today&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s1">&amp;#39;.mp3&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mp3upload&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">upload_blob&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">audio_data&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">overwrite&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">content_settings&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ContentSettings&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">content_type&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;audio/mpeg&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="conclusion">Conclusion&lt;/h2>
+&lt;p>I hope this article gives you to confidence and some ideas on how you can use SSML with Azure AI Speech service. I am really enjoying learning about Azure AI Speech service and SSML and I am looking forward to using it more in the future.&lt;/p>
+&lt;p>I hope you found this post useful. If you have any questions, feel free to reach out to me on &lt;a class="link" href="https://twitter.com/fredderf204" target="_blank" rel="noopener"
+>Twitter&lt;/a> or &lt;a class="link" href="https://www.linkedin.com/in/1michaelfriedrich/" target="_blank" rel="noopener"
+>Linkedin&lt;/a>.&lt;/p></description></item><item><title>AI Generated Azure News Summary</title><link>https://fredderf204.github.io/mfblog4/p/ai-generated-azure-news-summary/</link><pubDate>Fri, 24 Nov 2023 15:46:04 +1100</pubDate><guid>https://fredderf204.github.io/mfblog4/p/ai-generated-azure-news-summary/</guid><description>&lt;img src="https://fredderf204.github.io/mfblog4/p/ai-generated-azure-news-summary/cover.jpg" alt="Featured image of post AI Generated Azure News Summary" />&lt;p>Are you trying to keep up with all of the daily Azure news? Are you finding it difficult and overwhelming? Well, I do 😭 but I have a solution for you 😎 I&amp;rsquo;ve created an Azure Function centred process that takes news articles from places like &lt;a class="link" href="https://azurefeeds.com/" target="_blank" rel="noopener"
+>Azure Feeds&lt;/a> and creates a summary of them using &lt;a class="link" href="https://azure.microsoft.com/en-us/products/ai-services/openai-service" target="_blank" rel="noopener"
+>Azure Open AI&lt;/a>.&lt;/p>
+&lt;h2 id="tldr">TLDR&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a class="link" href="https://github.com/fredderf204/ai-gen-news-summary" target="_blank" rel="noopener"
+>GitHub Repo&lt;/a>&lt;/li>
+&lt;li>Why I created this&lt;/li>
+&lt;li>How it works&lt;/li>
+&lt;li>How to use it&lt;/li>
+&lt;li>What&amp;rsquo;s next&lt;/li>
+&lt;/ul>
+&lt;h2 id="github-repo">GitHub Repo&lt;/h2>
+&lt;p>The code for this project can be found &lt;a class="link" href="https://github.com/fredderf204/ai-gen-news-summary" target="_blank" rel="noopener"
+>here&lt;/a>. Feel free to fork it and make it your own. Or if you have any issues with the code or have any suggestions, please raise an issue ✊&lt;/p>
+&lt;h2 id="why-i-created-this">Why I created this&lt;/h2>
+&lt;p>I created this project for a few reasons:&lt;/p>
+&lt;ol>
+&lt;li>I find it very difficult to keep up with all of the Azure news. There is so much of it and it&amp;rsquo;s coming from so many different places. I wanted to create a way to summarise all of the news into one place.&lt;/li>
+&lt;li>I wanted a baseline of what has happened in the Azure world over the last 24 hours, but I wanted a system where if I saw something that was interesting, I could go and read the full article.&lt;/li>
+&lt;li>I wanted a use case to build something with &lt;a class="link" href="https://azure.microsoft.com/en-us/products/ai-services/openai-service" target="_blank" rel="noopener"
+>Azure Open AI&lt;/a>. I find this is the best way for me to learn something new.&lt;/li>
+&lt;/ol>
+&lt;h2 id="how-it-works">How it works&lt;/h2>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/1.jpg"
+width="1017"
+height="427"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/1_hub7e2b8a672df59edf8ac0fb6f1e8e33e_37326_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/1_hub7e2b8a672df59edf8ac0fb6f1e8e33e_37326_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Overview"
+class="gallery-image"
+data-flex-grow="238"
+data-flex-basis="571px"
+>&lt;/p>
+&lt;ol>
+&lt;li>I have an Azure Function that runs every 24 hours on a timer trigger called mf-az-feeds. It gets the latest news articles from &lt;a class="link" href="https://azurefeeds.com/" target="_blank" rel="noopener"
+>Azure Feeds&lt;/a> using RSS and sends a JSON message to an Azure storage queue. The JSON contains fields like; title, description, link, and published date.&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>Huge shout out to &lt;a class="link" href="https://azurefeeds.com/" target="_blank" rel="noopener"
+>Azure Feeds&lt;/a> as it&amp;rsquo;s the place I have been getting my Azure news daily for many years!&lt;/li>
+&lt;li>This process could be scaled to get news from other sources as diagramed, but I haven&amp;rsquo;t done that yet.&lt;/li>
+&lt;/ul>
+&lt;ol start="2">
+&lt;li>The queueworker Azure Function reads each JSON message of the storage queue (queue trigger) and then uses &lt;a class="link" href="https://azure.microsoft.com/en-us/products/ai-services/openai-service" target="_blank" rel="noopener"
+>Azure Open AI&lt;/a> to create a summary of each article. Then the summary is combined with the JSON contains fields of title, description, link, and published date and stored in BLOB storage as JSON.&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>I choose this process because I wanted a copy of the JSON and BLOB storage is cheap!&lt;/li>
+&lt;li>Each day has it&amp;rsquo;s own container and each article has it&amp;rsquo;s own JSON file.&lt;/li>
+&lt;/ul>
+&lt;ol start="3">
+&lt;li>The html-email function has a time trigger that run every 24 hours (and 20 minutes after the mf-az-feeds function) and gets the JSON from BLOB storage and creates a HTML file. I store a copy of the html file in the days storage container and a copy in to the static website folder ($web) in Azure Storage. Then the function sends a REST request to my Logic App with the static website folder url, which in turn gets emailed to me.&lt;/li>
+&lt;/ol>
+&lt;ul>
+&lt;li>I haven&amp;rsquo;t documented the static website folder ($web) copy in the above diagram, but it&amp;rsquo;s there. And so I can go the same URL each day, and it will be up to date with a AI generated summary of the Azure news for that day.&lt;/li>
+&lt;/ul>
+&lt;p>For example, this is what today&amp;rsquo;s webpage looks like;&lt;/p>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/2.jpg"
+width="1332"
+height="795"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/2_hu3b477598c117d9859a0b7ba04a0b5e29_257443_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/2_hu3b477598c117d9859a0b7ba04a0b5e29_257443_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Today&amp;rsquo;s Azure News Summary"
+class="gallery-image"
+data-flex-grow="167"
+data-flex-basis="402px"
+>&lt;/p>
+&lt;h2 id="how-to-use-it">How to use it&lt;/h2>
+&lt;h3 id="prerequisites">Prerequisites&lt;/h3>
+&lt;ul>
+&lt;li>Azure subscription&lt;/li>
+&lt;li>Azure Function App
+&lt;ul>
+&lt;li>Add the below Function App Configuration Application settings once known.
+&lt;ul>
+&lt;li>&amp;ldquo;targetrss&amp;rdquo;: &amp;ldquo;&amp;rdquo;,&lt;/li>
+&lt;li>&amp;ldquo;logicappurl&amp;rdquo;: &amp;ldquo;&amp;rdquo;,&lt;/li>
+&lt;li>&amp;ldquo;containerurl&amp;rdquo;: &amp;ldquo;&amp;rdquo;,&lt;/li>
+&lt;li>&amp;ldquo;storageaccount&amp;rdquo;: &amp;ldquo;&amp;rdquo;, &amp;lt;&amp;mdash;this is the connection string of your storage account.&lt;/li>
+&lt;li>&amp;ldquo;aoaiendpoint&amp;rdquo;: &amp;ldquo;&amp;rdquo;,&lt;/li>
+&lt;li>&amp;ldquo;aoaikey&amp;rdquo;: &amp;ldquo;&amp;rdquo;,&lt;/li>
+&lt;li>&amp;ldquo;aoaimodel&amp;rdquo;: &amp;ldquo;&amp;rdquo;,&lt;/li>
+&lt;li>&amp;ldquo;queuename&amp;rdquo;: &amp;ldquo;rssprocess&amp;rdquo;&lt;/li>
+&lt;li>&amp;ldquo;staticurl&amp;rdquo;: &amp;quot;&amp;quot; &amp;lt;&amp;mdash;this is the static website URL of your storage account.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>Azure Storage Account
+&lt;ul>
+&lt;li>Blob Storage Container (remember the url path to this container.&lt;/li>
+&lt;li>Static website hosting enabled (remember this URL)&lt;/li>
+&lt;li>SAS Key (remember the key)&lt;/li>
+&lt;li>Queue with name rssprocess (this is hardcoded in the queueworker function.json)&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>Azure Open AI resource (remember the endpoint name, key and model name.)&lt;/li>
+&lt;li>Azure Logic App (remember the URL)&lt;/li>
+&lt;/ul>
+&lt;h3 id="deploy-the-azure-function-app">Deploy the Azure Function App&lt;/h3>
+&lt;p>Below are the steps to deploy the Azure Function App to your Azure subscription from your local machine. I know this is the best way to do this, but I haven&amp;rsquo;t had time to create an ARM template yet. If you want to create an ARM template, please raise a PR ✊&lt;/p>
+&lt;ol>
+&lt;li>Clone the repo&lt;/li>
+&lt;li>Open the repo in VS Code&lt;/li>
+&lt;li>Make a Python virtual environment&lt;/li>
+&lt;li>Install the requirements.txt&lt;/li>
+&lt;li>Create a local.settings.json file and add the below settings. (This step isn&amp;rsquo;t required if you are deploying to Azure, but if you ever want to debug it locally, it will be.)&lt;/li>
+&lt;/ol>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-json" data-lang="json">&lt;span class="line">&lt;span class="cl">&lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;IsEncrypted&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="kc">false&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;Values&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="p">{&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;AzureWebJobsStorage&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;FUNCTIONS_WORKER_RUNTIME&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;python&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;targetrss&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;logicappurl&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;containerurl&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;storageaccount&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;aoaiendpoint&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;aoaikey&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;aoaimodel&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;queuename&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;rssprocess&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nt">&amp;#34;staticurl&amp;#34;&lt;/span>&lt;span class="p">:&lt;/span> &lt;span class="s2">&amp;#34;&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;ol start="6">
+&lt;li>Deploy the Azure Function App to your Azure subscription using the Azure Functions extension in VS Code.&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/3.jpg"
+width="547"
+height="704"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/3_hue8b19a85d8beead4c705dd1ecdc67ecb_75685_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/3_hue8b19a85d8beead4c705dd1ecdc67ecb_75685_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Deploy Azure Function App"
+class="gallery-image"
+data-flex-grow="77"
+data-flex-basis="186px"
+>&lt;/p>
+&lt;blockquote>
+&lt;p>💡Tip: I also like to have the function locally because I can then use the Azure extension in VS Code to run the function in Azure. In case something is wrong or borken and it needs a manual trigger.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/4.jpg"
+width="822"
+height="637"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/4_hub59f076c463835c1d3d3c20264ccee97_154646_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/ai-generated-azure-news-summary/4_hub59f076c463835c1d3d3c20264ccee97_154646_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Trigger Azure Function"
+class="gallery-image"
+data-flex-grow="129"
+data-flex-basis="309px"
+>&lt;/p>
+&lt;h2 id="whats-next">What&amp;rsquo;s next&lt;/h2>
+&lt;p>I have a few ideas on what I want to do next with this project. I&amp;rsquo;m not sure which one I will do first, but I will do them all eventually. Add a comment below if you have any suggestions or want to help out ✊&lt;/p></description></item><item><title>Running Azure Functions locally</title><link>https://fredderf204.github.io/mfblog4/p/running-azure-functions-locally/</link><pubDate>Mon, 13 Nov 2023 16:44:06 +1100</pubDate><guid>https://fredderf204.github.io/mfblog4/p/running-azure-functions-locally/</guid><description>&lt;img src="https://fredderf204.github.io/mfblog4/p/running-azure-functions-locally/cover.jpg" alt="Featured image of post Running Azure Functions locally" />&lt;p>Running Azure Functions locally isn&amp;rsquo;t something new, but it&amp;rsquo;s being a while since I&amp;rsquo;ve done it and I thought I&amp;rsquo;d share my experiences with some of the new tools, using Python and triggering local functions using time and queue triggers.&lt;/p>
+&lt;h2 id="tldr">TLDR&lt;/h2>
+&lt;ul>
+&lt;li>Use Visual Studio Code&lt;/li>
+&lt;li>Install the Azure Functions extension&lt;/li>
+&lt;li>Install the Azure Functions Core Tools&lt;/li>
+&lt;li>Install the Azurite&lt;/li>
+&lt;li>Install the Azure Storage Explorer&lt;/li>
+&lt;/ul>
+&lt;h2 id="vs-code">VS Code&lt;/h2>
+&lt;p>If you are developing Azure functions locally, I couldn&amp;rsquo;t recommend &lt;a class="link" href="https://code.visualstudio.com/" target="_blank" rel="noopener"
+>Visual Studio Code&lt;/a> enough. It&amp;rsquo;s a great editor and has a lot of great extensions that make developing Azure Functions locally a breeze. Also it&amp;rsquo;s free and available on your favourite platform - Linux, macOS, and Windows.&lt;/p>
+&lt;h2 id="developing-functions-locally">Developing Functions locally&lt;/h2>
+&lt;p>There is already a great article &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code?tabs=node-v3%2Cpython-v2%2Cisolated-process&amp;amp;pivots=programming-language-python" target="_blank" rel="noopener"
+>here&lt;/a> on how to develop Azure Functions by using Visual Studio Code.&lt;/p>
+&lt;p>The Azure Functions extension provides these benefits:&lt;/p>
+&lt;ul>
+&lt;li>Edit, build, and run functions on your local development computer.&lt;/li>
+&lt;li>Publish your Azure Functions project directly to Azure.&lt;/li>
+&lt;li>Write your functions in various languages while taking advantage of the benefits of Visual Studio Code.&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>💎 But to develop Azure Functions locally, you must install the &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local" target="_blank" rel="noopener"
+>Azure Functions Core Tools&lt;/a> which enables an integrated local debugging experience. When using the Azure Functions extension, the easiest way to install Core Tools is by running the &lt;code>Azure Functions: Install or Update Azure Functions Core Tools&lt;/code> command from the command pallet.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="python">Python&lt;/h2>
+&lt;p>There isn&amp;rsquo;t anything in particular you need to do make Python work with Azure Functions, but I couldn&amp;rsquo;t recommend enough creating a virtual environment and using the same Python version that Azure Functions use in Azure. This will help with any issues you may have with dependencies once you deploy your Function to Azure.&lt;/p>
+&lt;h2 id="local-debugging">Local debugging&lt;/h2>
+&lt;p>I can&amp;rsquo;t believe that I wasn&amp;rsquo;t doing this from the start. The first few times I would right my Azure Function locally, deploy it to Azure and wait and see if it worked.&lt;/p>
+&lt;blockquote>
+&lt;p>💎 This is a terrible idea and slowed down my development significantly. Once I started to debug locally, I was able to do so much more in a shorter amount of time.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="what-the-heck-is-azurite">What the heck is Azurite?&lt;/h2>
+&lt;p>Have you ever wanted to run and debug your function locally, but your Azure Function needs to interact with Azure Storage?&lt;/p>
+&lt;p>&lt;a class="link" href="https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio" target="_blank" rel="noopener"
+>Azurite&lt;/a> is a great tool that provides a local Azure Storage emulator that emulates the Azure Blob, Queue, and Table services for local development purposes. It is the best way to test your Azure Storage code without going to Azure.&lt;/p>
+&lt;p>For instance, one of my Azure Functions had to write to Azure Blob storage. Azurite come in super handy as it can emulate Azure Blob storage locally. But what I did notice was that Azurite would validate my request to Azure Blob storage, but would not actually create the container and Blob object. But for me, having the request validated is good enough for development.&lt;/p>
+&lt;p>Also starting the Azurite emulator is super easy. Once install via a VSCode extension, look at the bottom of VSCode and you should see some button that look like this&lt;/p>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/1.jpg"
+width="981"
+height="121"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/1_hu4b5da6a11a18ffe29500905b716ed0d6_34516_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/1_hu4b5da6a11a18ffe29500905b716ed0d6_34516_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Azurite"
+class="gallery-image"
+data-flex-grow="810"
+data-flex-basis="1945px"
+>&lt;/p>
+&lt;p>You simply click on one of those services to start them up.&lt;/p>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/2.jpg"
+width="969"
+height="128"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/2_hud13b1f7acb3f0734be54f258c2a016c3_34675_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/2_hud13b1f7acb3f0734be54f258c2a016c3_34675_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Azurite"
+class="gallery-image"
+data-flex-grow="757"
+data-flex-basis="1816px"
+>&lt;/p>
+&lt;p>Speaking of development, Azurite can be run as a docker container, so I can imagine how that could be automated and added to a CI/CD pipeline. This way you can test your app in a pipeline before deploying to Azure, speeding up development ans shortening the dev cycle.&lt;/p>
+&lt;h2 id="how-to-trigger-functions-locally">How to trigger functions locally&lt;/h2>
+&lt;p>Next challenge I faced was how to do trigger these functions locally? One function was setup on a time trigger to run once per day, and the other had a Azure queue trigger.&lt;/p>
+&lt;h3 id="time-trigger">Time trigger&lt;/h3>
+&lt;p>I struggled to find the answer to this on 😞 but buried deep in the comments in this &lt;a class="link" href="https://stackoverflow.com/questions/46556621/what-is-the-simplest-way-to-run-a-timer-triggered-azure-function-locally-once" target="_blank" rel="noopener"
+>thread&lt;/a> I found the answer.&lt;/p>
+&lt;blockquote>
+&lt;p>💎 You have to send a POST request to the local admin endpoint &lt;code>http://localhost:{port}/admin/functions/{function_name}&lt;/code> with &lt;code>Content-Type = application/json&lt;/code> and body of &lt;code>{ &amp;quot;input&amp;quot;: null }&lt;/code>&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/3.jpg"
+width="1491"
+height="552"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/3_hufa79c66810326e61d787484b50f00f6b_76064_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/3_hufa79c66810326e61d787484b50f00f6b_76064_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Postman"
+class="gallery-image"
+data-flex-grow="270"
+data-flex-basis="648px"
+>&lt;/p>
+&lt;p>As you can see above I used Postman to send a POST request to the local admin endpoint of &lt;code>http://localhost:7071/admin/functions/mf-az-feeds&lt;/code>. Also please not that &lt;code>{ &amp;quot;input&amp;quot;: null }&lt;/code> was the only body data that triggered the function. If I sent any other value for the input, the function would not trigger.&lt;/p>
+&lt;h3 id="queue-trigger">Queue trigger&lt;/h3>
+&lt;p>This was slightly simpler, but requires 3 pre-reqs&lt;/p>
+&lt;ul>
+&lt;li>Installing &lt;a class="link" href="https://azure.microsoft.com/en-us/products/storage/storage-explorer/" target="_blank" rel="noopener"
+>Azure Storage Explorer&lt;/a>.&lt;/li>
+&lt;li>Starting up the Azurite queue service in Visual Studio Code.&lt;/li>
+&lt;li>The local.settings.json file on your Function project needs to have the following well-known account and key &lt;code>&amp;quot;storageaccount&amp;quot;: &amp;quot;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;&amp;quot;,&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/4.jpg"
+width="539"
+height="558"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/4_huda6be5ca42dd1a564979ec7623a76e60_76826_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/4_huda6be5ca42dd1a564979ec7623a76e60_76826_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Azure Storage Explorer"
+class="gallery-image"
+data-flex-grow="96"
+data-flex-basis="231px"
+>&lt;/p>
+&lt;p>Then I used the Azure Storage Explorer to connect to the local Azurite queue service and crate a new queue with the same name as my queue trigger. Next I dropped a message in that queue, which triggered the function.&lt;/p>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/5.jpg"
+width="1086"
+height="815"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/5_hu78e3c59d52faa9b25c818d8156481b90_96752_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/running-azure-functions-locally/5_hu78e3c59d52faa9b25c818d8156481b90_96752_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Azure Storage Explorer"
+class="gallery-image"
+data-flex-grow="133"
+data-flex-basis="319px"
+>&lt;/p>
+&lt;h2 id="conclusion">Conclusion&lt;/h2>
+&lt;p>I hope this helps you with your local Azure Function development. I know it helped me and I&amp;rsquo;m sure I&amp;rsquo;ll be using these tools again in the future.&lt;/p>
+&lt;p>I hope you found this post useful. If you have any questions, feel free to reach out to me on &lt;a class="link" href="https://twitter.com/fredderf204" target="_blank" rel="noopener"
+>Twitter&lt;/a> or &lt;a class="link" href="https://www.linkedin.com/in/1michaelfriedrich/" target="_blank" rel="noopener"
+>Linkedin&lt;/a>.&lt;/p></description></item><item><title>3d printed event badge</title><link>https://fredderf204.github.io/mfblog4/p/3d-printed-event-badge/</link><pubDate>Mon, 13 Nov 2023 11:55:10 +1100</pubDate><guid>https://fredderf204.github.io/mfblog4/p/3d-printed-event-badge/</guid><description>&lt;img src="https://fredderf204.github.io/mfblog4/p/3d-printed-event-badge/cover.jpg" alt="Featured image of post 3d printed event badge" />&lt;p>I&amp;rsquo;ve been toying with the idea of making a custom event badge for a while now, and I finally got around to it!&lt;/p>
+&lt;p>The reason being is that I love connecting with people, but I hate constantly getting my phone out of my pocket to show my Linkedin QR code. So I thought it would be cool to have a badge with a QR code on it that people could scan, get my details and connect on Linkedin 😎&lt;/p>
+&lt;h2 id="tldr">TLDR&lt;/h2>
+&lt;ul>
+&lt;li>Take a screenshot of your LinkedIn QR code.&lt;/li>
+&lt;li>Convert it to a SVG image. I used &lt;a class="link" href="https://www.adobe.com/express/feature/image/convert/jpg-to-svg" target="_blank" rel="noopener"
+>Adobe jpg-to-svg&lt;/a>.&lt;/li>
+&lt;li>Convert the SVG to a STL file. I used &lt;a class="link" href="https://imagetostl.com/convert/file/svg/to/stl" target="_blank" rel="noopener"
+>imagetostl&lt;/a>.&lt;/li>
+&lt;li>Make the event badge using 3d modelling software. I used &lt;a class="link" href="https://www.tinkercad.com/" target="_blank" rel="noopener"
+>Tinkercad&lt;/a>&lt;/li>
+&lt;li>Print STL to physical object 🍾&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>❗The last step requires a 3d printer.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="getting-your-linkedin-qr-code">Getting your LinkedIn QR code&lt;/h2>
+&lt;p>This process wasn&amp;rsquo;t too difficult, but it was a bit of a pain. I&amp;rsquo;m sure there&amp;rsquo;s a better way to do it, but this is what I did.&lt;/p>
+&lt;ol>
+&lt;li>Open the Linkedin app on your phone.&lt;/li>
+&lt;li>Click on the search bar on the top of the screen.&lt;/li>
+&lt;li>Click on the QR code icon in the top right corner.&lt;/li>
+&lt;li>Screenshot the QR code.&lt;/li>
+&lt;li>Email the screenshot to yourself.&lt;/li>
+&lt;li>Crop the QR code out of the screenshot. like below:&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/1.jpg"
+width="560"
+height="560"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/1_hu3ff87ca3ac16b5b1376692e9e92a77bb_59974_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/1_hu3ff87ca3ac16b5b1376692e9e92a77bb_59974_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="QR code"
+class="gallery-image"
+data-flex-grow="100"
+data-flex-basis="240px"
+>&lt;/p>
+&lt;h2 id="converting-the-qr-code-to-a-svg">Converting the QR code to a SVG&lt;/h2>
+&lt;p>I used &lt;a class="link" href="https://www.adobe.com/express/feature/image/convert/jpg-to-svg" target="_blank" rel="noopener"
+>Adobe jpg-to-svg&lt;/a> to convert the QR code to a SVG image. It&amp;rsquo;s a free online tool that does the job well. Not too much to see about this process, just upload the image and download the SVG.&lt;/p>
+&lt;h2 id="converting-the-svg-to-a-stl">Converting the SVG to a STL&lt;/h2>
+&lt;p>I used &lt;a class="link" href="https://imagetostl.com/convert/file/svg/to/stl" target="_blank" rel="noopener"
+>imagetostl&lt;/a> to convert the SVG to a STL file. It&amp;rsquo;s a free online tool that does the job well.&lt;/p>
+&lt;p>The reason we are converting this file into a STL, is so I can import it into &lt;a class="link" href="https://www.tinkercad.com/" target="_blank" rel="noopener"
+>Tinkercad&lt;/a> to create the badge. If you are using another 3d modelling tool that can import SVG files, you can skip this step.&lt;/p>
+&lt;ul>
+&lt;li>Go to &lt;a class="link" href="https://imagetostl.com/convert/file/svg/to/stl" target="_blank" rel="noopener"
+>imagetostl&lt;/a>&lt;/li>
+&lt;li>Upload your SVG file&lt;/li>
+&lt;li>Select &lt;strong>Invert Output&lt;/strong> like below and convert&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/2.jpg"
+width="1280"
+height="673"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/2_huf75bbfe36ecfddce507e7ae4a065939b_78829_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/2_huf75bbfe36ecfddce507e7ae4a065939b_78829_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="imagetostl"
+class="gallery-image"
+data-flex-grow="190"
+data-flex-basis="456px"
+>&lt;/p>
+&lt;ul>
+&lt;li>Your outpt put should look like the below image. Download the STL file.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/3.jpg"
+width="1280"
+height="671"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/3_hu76cb75ab58f7fe8b2f80e876afc871ee_70632_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/3_hu76cb75ab58f7fe8b2f80e876afc871ee_70632_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="imagetostl"
+class="gallery-image"
+data-flex-grow="190"
+data-flex-basis="457px"
+>&lt;/p>
+&lt;h2 id="making-the-badge">Making the badge&lt;/h2>
+&lt;p>I used &lt;a class="link" href="https://www.tinkercad.com/" target="_blank" rel="noopener"
+>Tinkercad&lt;/a> to make the badge. I find Tinkercad to be the easiest 3d modelling tool to use, but you can use whatever you like. I have tried other (Blender, Fusion 360, etc) but I find them to be too complicated for my needs.&lt;/p>
+&lt;ul>
+&lt;li>Open Tinkercad and create a flat card to put your QR code on. I made mine 110mm x 50mm x 1mm.&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>💡Tip: 1mm is too thin. It bends too much and I feel like it could break. Next time I will make it 2mm thick.&lt;/p>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>
+&lt;p>I also added a hole to the top so I could attach a lanyard to it.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Next I imported my QR Code and place it on the card. I also made it 1mm thick.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Also I added my first name and company to the right of the card. I used the default font and made it 1mm high.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Lastly I downloaded the STL file to my PC.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/4.jpg"
+width="1280"
+height="669"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/4_hu84be74f385430927772a27d6b9f25718_236600_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/4_hu84be74f385430927772a27d6b9f25718_236600_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Tinkercad"
+class="gallery-image"
+data-flex-grow="191"
+data-flex-basis="459px"
+>&lt;/p>
+&lt;h2 id="printing-the-badge">Printing the badge&lt;/h2>
+&lt;blockquote>
+&lt;p>💡Tip: The printing process will vary depending on what 3d printer you have. I have a Bambu Lab P1P and the Bambu Lab AMS, which means I can print in multiple colours. I printed the card in white and the QR code and lettering in black.&lt;/p>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>
+&lt;p>Open the downloaded STL in Bambu Studio.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Add the desired colours to the STL.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Print the STL using defaults.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/5.jpg"
+width="1280"
+height="694"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/5_hua1a58189433e788bf342320e24efbd7c_186217_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/5_hua1a58189433e788bf342320e24efbd7c_186217_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Bambu Studio"
+class="gallery-image"
+data-flex-grow="184"
+data-flex-basis="442px"
+>&lt;/p>
+&lt;p>and 27 minutes later, you have your event badge!&lt;/p>
+&lt;p>&lt;img src="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/6.jpg"
+width="1008"
+height="567"
+srcset="https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/6_huf26ef2ca8120401a00932dc62dcf9d0c_218775_480x0_resize_q75_box.jpg 480w, https://fredderf204.github.io/mfblog4/mfblog4/p/3d-printed-event-badge/6_huf26ef2ca8120401a00932dc62dcf9d0c_218775_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Badge"
+class="gallery-image"
+data-flex-grow="177"
+data-flex-basis="426px"
+>&lt;/p>
+&lt;h2 id="conclusion">Conclusion&lt;/h2>
+&lt;p>I&amp;rsquo;m really happy with how the badge turned out. I&amp;rsquo;ve already used it at a few events and it&amp;rsquo;s been a great conversation starter. I&amp;rsquo;ve also had a few people ask me how I made it, so I thought I would write this blog post to share the process.&lt;/p>
+&lt;p>I hope you found this post useful. If you have any questions, feel free to reach out to me on &lt;a class="link" href="https://twitter.com/fredderf204" target="_blank" rel="noopener"
+>Twitter&lt;/a> or &lt;a class="link" href="https://www.linkedin.com/in/1michaelfriedrich/" target="_blank" rel="noopener"
+>Linkedin&lt;/a>.&lt;/p></description></item><item><title>I'm back</title><link>https://fredderf204.github.io/mfblog4/p/im-back/</link><pubDate>Mon, 13 Nov 2023 10:35:57 +1100</pubDate><guid>https://fredderf204.github.io/mfblog4/p/im-back/</guid><description>&lt;img src="https://fredderf204.github.io/mfblog4/p/im-back/cover.jpg" alt="Featured image of post I'm back" />&lt;p>After a fairly long hiatus, I&amp;rsquo;m back blogging again!&lt;/p>
+&lt;p>Looking forward to pumping out some new interesting content soon!&lt;/p></description></item><item><title>Archives</title><link>https://fredderf204.github.io/mfblog4/archives/</link><pubDate>Sun, 06 Mar 2022 00:00:00 +0000</pubDate><guid>https://fredderf204.github.io/mfblog4/archives/</guid><description/></item><item><title>Links</title><link>https://fredderf204.github.io/mfblog4/links/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://fredderf204.github.io/mfblog4/links/</guid><description>&lt;p>To use this feature, add &lt;code>links&lt;/code> section to frontmatter.&lt;/p>
+&lt;p>This page&amp;rsquo;s frontmatter:&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;span class="lnt">9
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">links&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>- &lt;span class="nt">title&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">GitHub&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">GitHub is the world&amp;#39;s largest software development platform.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">website&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">https://github.com&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">image&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>- &lt;span class="nt">title&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">TypeScript&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">TypeScript is a typed superset of JavaScript that compiles to plain JavaScript.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">website&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">https://www.typescriptlang.org&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">image&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">ts-logo-128.jpg&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;code>image&lt;/code> field accepts both local and external images.&lt;/p></description></item><item><title>Search</title><link>https://fredderf204.github.io/mfblog4/search/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://fredderf204.github.io/mfblog4/search/</guid><description/></item></channel></rss>
