@@ -44,7 +44,7 @@ curl --location --request GET 'https://southeastasia.tts.speech.microsoft.com/co
 
 ```
 
-The above command sends a GET request to https://southeastasia.tts.speech.microsoft.com/cognitiveservices/voices/list, then pipes the output to jq, which is a lightweight and flexible command-line JSON processor. The jq command filters the output to only show the voices that are available in the en-NZ locale.
+The above command sends a GET request to <https://southeastasia.tts.speech.microsoft.com/cognitiveservices/voices/list>, then pipes the output to jq, which is a lightweight and flexible command-line JSON processor. The jq command filters the output to only show the voices that are available in the en-NZ locale.
 
 Please replace southeastasia with the region that you have deployed your Speech service to and replace the Ocp-Apim-Subscription-Key with your key. You can find your key in the Azure portal under your Speech service resource.
 
@@ -58,13 +58,13 @@ I am new to Azure AI Speech service and SSML. The best way I have found to inter
 
 ![Speech Studio](1.jpg)
 
-Next you can create a new file or folder. Click on new Text file. 
+Next you can create a new file or folder. Click on new Text file.
 
 Once in the editor you can enter your text and then select the voice that you want to use. At this point, if you don't want to use SSML you don't have to. You can just use the default experience and happily create an audio file from text. But if you want to use SSML, you can click on the SSML button and enter your SSML code.
 
 ![Speech Studio](2.jpg)
 
-Once you have entered your SSML code, you can click on the play button to hear what it sounds like. If you are happy with it, you can then click on the export button to download the audio file, plain text or the SSML code   .
+Once you have entered your SSML code, you can click on the play button to hear what it sounds like. If you are happy with it, you can then click on the export button to download the audio file, plain text or the SSML code.
 
 ![Speech Studio](3.jpg)
 

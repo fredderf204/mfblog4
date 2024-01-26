@@ -38,7 +38,7 @@ The Azure Functions extension provides these benefits:
 
 ## Python
 
-There isn't anything in particular you need to do make Python work with Azure Functions, but I couldn't recommend enough creating a virtual environment and using the same Python version that Azure Functions use in Azure. This will help with any issues you may have with dependencies once you deploy your Function to Azure. 
+There isn't anything in particular you need to do make Python work with Azure Functions, but I couldn't recommend enough creating a virtual environment and using the same Python version that Azure Functions use in Azure. This will help with any issues you may have with dependencies once you deploy your Function to Azure.
 
 ## Local debugging
 
@@ -70,7 +70,7 @@ Next challenge I faced was how to do trigger these functions locally? One functi
 
 ### Time trigger
 
-I struggled to find the answer to this on 😞 but buried deep in the comments in this [thread](https://stackoverflow.com/questions/46556621/what-is-the-simplest-way-to-run-a-timer-triggered-azure-function-locally-once) I found the answer. 
+I struggled to find the answer to this on 😞 but buried deep in the comments in this [thread](https://stackoverflow.com/questions/46556621/what-is-the-simplest-way-to-run-a-timer-triggered-azure-function-locally-once) I found the answer.
 
 > 💎 You have to send a POST request to the local admin endpoint ``http://localhost:{port}/admin/functions/{function_name}`` with ``Content-Type = application/json`` and body of ``{ "input": null }``
 
