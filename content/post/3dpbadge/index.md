@@ -7,6 +7,7 @@ categories: [3dprinting]
 hidden: false
 comments: true
 draft: false
+keywords: [3d printing, event badge, qr code]
 ---
 
 I've been toying with the idea of making a custom event badge for a while now, and I finally got around to it!

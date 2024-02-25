@@ -10,6 +10,7 @@ comments: true
 draft: false
 categories: [Azure, AI, Python]
 tags: [Azure Functions]
+keywords: [Azure, AI, News, Gen AI]
 ---
 
 Are you trying to keep up with all of the daily Azure news? Are you finding it difficult and overwhelming? Well, I do 😭 but I have a solution for you 😎 I've created an Azure Function centred process that takes news articles from places like [Azure Feeds](https://azurefeeds.com/) and creates a summary of them using [Azure Open AI](https://azure.microsoft.com/en-us/products/ai-services/openai-service).

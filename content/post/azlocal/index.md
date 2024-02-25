@@ -8,6 +8,7 @@ comments: true
 draft: false
 categories: [Azure, Python]
 tags: [Azure Functions, VS Code]
+keywords: [Python, Azure Functions, VS Code, Local]
 ---
 
 Running Azure Functions locally isn't something new, but it's being a while since I've done it and I thought I'd share my experiences with some of the new tools, using Python and triggering local functions using time and queue triggers.

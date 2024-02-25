@@ -10,6 +10,7 @@ comments: true
 draft: false
 categories: [Azure, AI, Python]
 tags: [Azure Open AI]
+keywords: [Azure Open AI, Python, Performance, Latency]
 ---
 
 > I am a Microsoft employee, but the views expressed here are mine and not those of my employer.
