@@ -18,4 +18,4 @@ disqusShortname = "hugo-theme-stack"
 # Enable Google Analytics by entering your tracking code
 googleAnalytics = "G-C4H16BVKJJ"
 
-enableRobotsTXT = true
+enableRobotsTXT = false
