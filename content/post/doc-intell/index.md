@@ -33,12 +33,12 @@ The idea behind this post is to show you how to build a simple document processi
 
 The sample I have created will focus on Extraction and Enrichment sections of the above diagram, centred around a financial company who needs to process online applications that have Invoices and Receipts as part of the application process. Please see my diagram below for a high-level overview of the process.
 
-![Michaels Sample](2.png)
+![Michaels Sample](2.jpg)
 
 1. Customers use the financial company's application to apply for a rebate/loan. The application has been coded in Python with [Gradio](https://www.gradio.app/) to create a quick user interface.
 2. The application form data is sent to Azure CosmosDB for storage.
-3. The Invoice and Receipt are sent to separate containers in Azure Blob Storage.
-4. An Azure Function is triggered by the new documents in the Blob Storage containers and sends the documents to Azure AI Document Intelligence for processing. There is a separate function for Invoices, that uses the pre-built Invoice model, and a separate function for Receipts, that uses the pre-built Receipt model.
+3. The Invoice and Receipt are sent to Azure Blob Storage.
+4. An Azure Function is triggered by the new documents in the Blob Storage container and sends the documents to Azure AI Document Intelligence for processing. The function uses the pre-built Invoice and Receipt model.
 5. Azure AI Document Intelligence process the Invoice and Receipt and sends the extracted information to Azure CosmosDB for storage.
 6. An Azure Function is trigger and sends the Invoice and Receipt data to Azure Open AI for fraud detection. The results are sent to Azure CosmosDB for storage. The Invoice and Receipt documents are moved to a new container in Azure Blob Storage called `processed`.
 
@@ -58,11 +58,11 @@ The `leases` container was created so I can use the [Change Feed Processor](http
 
 ## 3. Azure Blob Storage
 
-I have created three containers in Azure Blob Storage called `invoices`, `receipts` and `processed`. The Invoice and Receipt documents are sent to the `invoices` and `receipts` containers respectively. When Invoice and Receipt documents have been processed, they are moved to a new container in Azure Blob Storage called `processed`.
+I have created two containers in Azure Blob Storage called `docs` and `processed`. The Invoice and Receipt documents are sent to the `docs` container. When Invoice and Receipt documents have been processed, they are moved to a new container in Azure Blob Storage called `processed`.
 
 ## 4. Azure Functions
 
-I have created three Azure Functions, one for Invoices one for Receipts and one for fraud detection. The Invoice function is triggered by the new documents in the `invoices` container and the Receipt function is triggered by the new documents in the `receipts` container. The functions send the documents to Azure AI Document Intelligence for processing. The results are sent to Azure CosmosDB for storage.
+I have created two Azure Functions, one for Invoices and Receipts and one for fraud detection. The docs function is triggered by the new documents in the `docs` container. The functions sends the documents to Azure AI Document Intelligence for processing and results are sent to Azure CosmosDB for storage.
 
 The code for both of these functions can be found in this [GitHub Repo](https://github.com/fredderf204/doc-intel-fraud).
 
@@ -119,7 +119,7 @@ I am using the Azure Open AI [completion endpoint](https://learn.microsoft.com/e
 If the invoice and receipt do not match, state they do not match. Then explain the reasons why they do not match in bullet point form.
 If the invoice and receipt do match, state they match. Then explain the reasons why they do match in bullet point form.`
 
-## 7 Bringing it all together
+## Bringing it all together
 
 From the perspective of the financial company, I have created another UI in [Gradio](https://www.gradio.app/) and the code can be found in [this GitHub Repo](https://github.com/fredderf204/doc-intel-fraud) called processor demo. This UI allows the financial company to view the applications that have been submitted and the results of the fraud detection process, as below;
 
