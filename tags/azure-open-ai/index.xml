@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Azure Open AI on MF Azure Blog</title><link>https://mfblog.au/tags/azure-open-ai/</link><description>Recent content in Azure Open AI on MF Azure Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 24 Mar 2024 15:23:32 +1100</lastBuildDate><atom:link href="https://mfblog.au/tags/azure-open-ai/index.xml" rel="self" type="application/rss+xml"/><item><title>Automated document processing and fraud detection with Azure.</title><link>https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./</link><pubDate>Sun, 24 Mar 2024 15:23:32 +1100</pubDate><guid>https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./</guid><description>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./cover.jpg" alt="Featured image of post Automated document processing and fraud detection with Azure." />&lt;blockquote>
+&lt;p>I am a Microsoft employee, but the views expressed here are mine and not those of my employer.&lt;/p>
+&lt;/blockquote>
+&lt;p>I have been working with some clients recently on projects to automate the processing of financial documents. The goal is to extract key information from these documents and then use that information to perform some analysis. The analysis could be anything from fraud detection, risk assessment, summarization, classification, etc.&lt;/p>
+&lt;p>The idea behind this post is to show you how to build a simple document processing pipeline using Azure AI Document Intelligence and Azure Open AI. We will use Azure Document Intelligence to extract key information from the documents and then use Azure Open AI to perform fraud detection on the extracted information.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./1.jpg"
+width="1710"
+height="540"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./1_hu90abb079da5f5c2732cb3521dc605d86_137759_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./1_hu90abb079da5f5c2732cb3521dc605d86_137759_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Automate document processing by using Azure Form Recognizer - Microsoft defined architecture"
+class="gallery-image"
+data-flex-grow="316"
+data-flex-basis="760px"
+>&lt;/p>
+&lt;h2 id="tldr">TLDR&lt;/h2>
+&lt;ul>
+&lt;li>Microsoft already has a defined architecture for automating document processing by using Azure AI Document Intelligence here - &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/architecture/ai-ml/architecture/automate-document-processing-azure-form-recognizer" target="_blank" rel="noopener"
+>Automate document processing by using Azure Form Recognizer&lt;/a> and above :)&lt;/li>
+&lt;li>Azure AI Document Intelligence is the new name for Azure Form Recognizer.&lt;/li>
+&lt;li>Azure AI Document Intelligence is an AI service that applies advanced machine learning to extract text, key-value pairs, tables, and structures from documents automatically and accurately.&lt;/li>
+&lt;li>I have created a working example of how to use Azure AI Document Intelligence, Azure Open AI, Azure Functions and Python to process financial documents in &lt;a class="link" href="https://github.com/fredderf204/doc-intel-fraud" target="_blank" rel="noopener"
+>this GitHub repo&lt;/a>.&lt;/li>
+&lt;li>This process can preform fraud detection process on the extracted information from the documents.&lt;/li>
+&lt;/ul>
+&lt;h2 id="introduction">Introduction&lt;/h2>
+&lt;p>The sample I have created will focus on Extraction and Enrichment sections of the above diagram, centred around a financial company who needs to process online applications that have Invoices and Receipts as part of the application process. Please see my diagram below for a high-level overview of the process.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./2.jpg"
+width="810"
+height="543"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./2_hu9858413beb8a35392e8a70bf4d80dfaa_32934_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./2_hu9858413beb8a35392e8a70bf4d80dfaa_32934_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Michaels Sample"
+class="gallery-image"
+data-flex-grow="149"
+data-flex-basis="358px"
+>&lt;/p>
+&lt;ol>
+&lt;li>Customers use the financial company&amp;rsquo;s application to apply for a rebate/loan. The application has been coded in Python with &lt;a class="link" href="https://www.gradio.app/" target="_blank" rel="noopener"
+>Gradio&lt;/a> to create a quick user interface.&lt;/li>
+&lt;li>The application form data is sent to Azure CosmosDB for storage.&lt;/li>
+&lt;li>The Invoice and Receipt are sent to Azure Blob Storage.&lt;/li>
+&lt;li>An Azure Function is triggered by the new documents in the Blob Storage container and sends the documents to Azure AI Document Intelligence for processing. The function uses the pre-built Invoice and Receipt model.&lt;/li>
+&lt;li>Azure AI Document Intelligence process the Invoice and Receipt and sends the extracted information to Azure CosmosDB for storage.&lt;/li>
+&lt;li>An Azure Function is trigger and sends the Invoice and Receipt data to Azure Open AI for fraud detection. The results are sent to Azure CosmosDB for storage. The Invoice and Receipt documents are moved to a new container in Azure Blob Storage called &lt;code>processed&lt;/code>.&lt;/li>
+&lt;/ol>
+&lt;h2 id="1-rebateloan-application">1. Rebate/Loan Application&lt;/h2>
+&lt;p>The application has been coded in Python with &lt;a class="link" href="https://www.gradio.app/" target="_blank" rel="noopener"
+>Gradio&lt;/a> to create a quick user interface. Applicants can fill in their details and attach an invoice and receipt to start the process. The application form data is sent to Azure CosmosDB for storage. The code for this can be found in &lt;a class="link" href="https://github.com/fredderf204/doc-intel-fraud" target="_blank" rel="noopener"
+>this GitHub Repo&lt;/a>.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./3.jpg"
+width="1487"
+height="799"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./3_hufcfeb6c32998f59a959bb71f3567ffa6_98801_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./3_hufcfeb6c32998f59a959bb71f3567ffa6_98801_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Application"
+class="gallery-image"
+data-flex-grow="186"
+data-flex-basis="446px"
+>&lt;/p>
+&lt;h2 id="2-azure-cosmosdb">2. Azure CosmosDB&lt;/h2>
+&lt;p>This is a vanilla Azure CosmosDB setup where I just accepted the defaults. I have created a database called &lt;code>ToDoItems&lt;/code> and two containers called &lt;code>Items&lt;/code> and &lt;code>leases&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>Side Note: I only used &lt;code>ToDoItems&lt;/code> and &lt;code>Items&lt;/code> and the database and container names because I was following a quick start guide. You should use more meaningful names for your project.&lt;/p>
+&lt;/blockquote>
+&lt;p>The &lt;code>leases&lt;/code> container was created so I can use the &lt;a class="link" href="https://docs.microsoft.com/en-us/azure/cosmos-db/change-feed-processor" target="_blank" rel="noopener"
+>Change Feed Processor&lt;/a> to trigger the Azure Function when new documents are added to the Invoice and Receipt containers.&lt;/p>
+&lt;h2 id="3-azure-blob-storage">3. Azure Blob Storage&lt;/h2>
+&lt;p>I have created two containers in Azure Blob Storage called &lt;code>docs&lt;/code> and &lt;code>processed&lt;/code>. The Invoice and Receipt documents are sent to the &lt;code>docs&lt;/code> container. When Invoice and Receipt documents have been processed, they are moved to a new container in Azure Blob Storage called &lt;code>processed&lt;/code>.&lt;/p>
+&lt;h2 id="4-azure-functions">4. Azure Functions&lt;/h2>
+&lt;p>I have created two Azure Functions, one for Invoices and Receipts and one for fraud detection. The docs function is triggered by the new documents in the &lt;code>docs&lt;/code> container. The functions sends the documents to Azure AI Document Intelligence for processing and results are sent to Azure CosmosDB for storage.&lt;/p>
+&lt;p>The code for both of these functions can be found in this &lt;a class="link" href="https://github.com/fredderf204/doc-intel-fraud" target="_blank" rel="noopener"
+>GitHub Repo&lt;/a>.&lt;/p>
+&lt;blockquote>
+&lt;p>Side Note: I used the &lt;a class="link" href="https://techcommunity.microsoft.com/t5/azure-compute-blog/azure-functions-v2-python-programming-model-is-generally/ba-p/3827474" target="_blank" rel="noopener"
+>Function v2 model for Python&lt;/a>, which uses the new decorator model. I found it easier to use than the old model and loved having all three functions and there triggers in the same file.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="5-azure-ai-document-intelligence">5. Azure AI Document Intelligence&lt;/h2>
+&lt;p>I am using the pre-built Invoice and Receipt models that are available in Azure AI Document Intelligence for this sample project, because they fit my needs. If you have other types of documents, you can create your own custom models.&lt;/p>
+&lt;p>There is a &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom?view=doc-intel-4.0.0" target="_blank" rel="noopener"
+>great article here&lt;/a> which takes you everything you need to know about customer models. There is an extract below;&lt;/p>
+&lt;p>&lt;code>Custom models now include custom classification models for scenarios where you need to identify the document type prior to invoking the extraction model. Classifier models are available starting with the 2023-07-31 (GA) API. A classification model can be paired with a custom extraction model to analyze and extract fields from forms and documents specific to your business to create a document processing solution. Standalone custom extraction models can be combined to create composed models.&lt;/code>&lt;/p>
+&lt;p>In my example, Azure AI Document Intelligence receives an API call from the Azure Function and sends the document to the pre-built Invoice or Receipt model for processing. The results are sent to Azure CosmosDB for storage.&lt;/p>
+&lt;p>I also store the confidence score of the extraction in the CosmosDB. This is important because I want to know how confident the model is in the extraction. If the confidence score is low, I may want to send the document to a human for review.&lt;/p>
+&lt;blockquote>
+&lt;p>I also store the content JSON response from the Azure AI Document Intelligence API in the CosmosDB. This will be useful for the enrichment process :)&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./4.jpg"
+width="1644"
+height="893"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./4_hu1cedf82e8279426fdf8779d32518f5dd_205298_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./4_hu1cedf82e8279426fdf8779d32518f5dd_205298_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Data stored in CosmosDB"
+class="gallery-image"
+data-flex-grow="184"
+data-flex-basis="441px"
+>&lt;/p>
+&lt;h2 id="6-azure-open-ai">6. Azure Open AI&lt;/h2>
+&lt;p>Now where does Azure Open AI come into this? Azure Open AI and generative AI can do many many things and there are many use cases for it within the financial industry. For my example, I chosen to create a fraud detection process.&lt;/p>
+&lt;p>Now this process is not designed to replace the human process, or the humans involved in fraud detection. It is design to make it easier for humans to do their job. I.e. flag certain applications as potentially fraudulent, record why Azure Open AI thinks it&amp;rsquo;s fraudulent and then have a human review them.&lt;/p>
+&lt;p>I have created a separate Azure Function for fraud detection. This function is triggered when a CosmosDB record (an application) has had both their Invoice and Receipt processed by Azure AI Document Intelligence. The function then sends the Invoice and Receipt data to Azure Open AI for fraud detection. The results are sent to Azure CosmosDB for storage.&lt;/p>
+&lt;p>For example, below is screen shot of a record in the CosmosDB. The &lt;code>comparison&lt;/code> field is the result of the fraud detection process.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./5.jpg"
+width="1681"
+height="896"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./5_huc9fcbf44ea22c7cea9040d39ed32027d_219750_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./5_huc9fcbf44ea22c7cea9040d39ed32027d_219750_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Data stored in CosmosDB"
+class="gallery-image"
+data-flex-grow="187"
+data-flex-basis="450px"
+>&lt;/p>
+&lt;p>I have pasted below the full text below;&lt;/p>
+&lt;p>&amp;ldquo;The invoice and receipt do match. Here are the reasons why they match:&lt;/p>
+&lt;ul>
+&lt;li>Both the invoice and receipt are from the same company, Contoso Ltd., and share the same company address and phone number.&lt;/li>
+&lt;li>The invoice and receipt have the same total amount due, $2624.99.&lt;/li>
+&lt;li>Both documents list the same quantity and description of items sold: 20 Solar Panels.&lt;/li>
+&lt;li>The itemized prices match, with a unit price of $130 and a total price for the items being $2600.00.&lt;/li>
+&lt;li>Shipping and handling costs are the same on both documents, $24.99.&lt;/li>
+&lt;li>The invoice and receipt both reflect no sales tax being added.&lt;/li>
+&lt;li>The receipt acknowledges payment being made via a credit card, which implies that the amount due on the invoice has been settled.&lt;/li>
+&lt;li>The salesperson&amp;rsquo;s name, Suman, is mentioned on both the invoice and receipt, supporting their correlation.&lt;/li>
+&lt;/ul>
+&lt;p>Thus, the matching details on both documents confirm that the invoice and receipt correspond to the same transaction.&amp;rdquo;&lt;/p>
+&lt;p>The example is from a legitimate submission where the invoice and receipt do match. So if I was a claims processor, I would be happy to see this response and this would provide me with the confidence to approve the application.&lt;/p>
+&lt;p>I am using the Azure Open AI &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/completions" target="_blank" rel="noopener"
+>completion endpoint&lt;/a> and the system prompt I am using in my Azure Open AI request is;&lt;/p>
+&lt;p>&lt;code>You are an AI assistant that helps audit invoices and receipts to make sure match. If the invoice and receipt do not match, state they do not match. Then explain the reasons why they do not match in bullet point form. If the invoice and receipt do match, state they match. Then explain the reasons why they do match in bullet point form.&lt;/code>&lt;/p>
+&lt;h2 id="bringing-it-all-together">Bringing it all together&lt;/h2>
+&lt;p>From the perspective of the financial company, I have created another UI in &lt;a class="link" href="https://www.gradio.app/" target="_blank" rel="noopener"
+>Gradio&lt;/a> and the code can be found in &lt;a class="link" href="https://github.com/fredderf204/doc-intel-fraud" target="_blank" rel="noopener"
+>this GitHub Repo&lt;/a> called processor demo. This UI allows the financial company to view the applications that have been submitted and the results of the fraud detection process, as below;&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./6.jpg"
+width="1518"
+height="896"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./6_hub7bf2a1b418d9abe638e2372d88ee346_239529_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./6_hub7bf2a1b418d9abe638e2372d88ee346_239529_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Processor Demo"
+class="gallery-image"
+data-flex-grow="169"
+data-flex-basis="406px"
+>&lt;/p>
+&lt;p>The claims processor can lookup a application number and view the details of the application. They can see the full extracted data from both the Invoice and Receipt, and the results of the fraud detection process in the comparison field.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./7.jpg"
+width="1349"
+height="757"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./7_hud2e05f9260daaeb5ddf927559399f220_182228_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure./7_hud2e05f9260daaeb5ddf927559399f220_182228_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Processor Demo"
+class="gallery-image"
+data-flex-grow="178"
+data-flex-basis="427px"
+>&lt;/p>
+&lt;p>This will allow the claims processor to make an informed decision on whether to approve or reject the application.&lt;/p>
+&lt;blockquote>
+&lt;p>For bonus points, because I also have the processed documents URI stored in CosmosDB, I could also display the invoice and receipt in the &lt;a class="link" href="https://www.gradio.app/" target="_blank" rel="noopener"
+>Gradio&lt;/a> UI, so as the claims processor is reading the comparison commentary produced by Azure Open AI, they can view the documents side by side.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="conclusion">Conclusion&lt;/h2>
+&lt;p>I hope this post has given you an insight into how you can use Azure AI Document Intelligence and Azure Open AI to automate the processing of financial documents. The sample I have created is just a starting point and there are many other use cases for these services.&lt;/p></description></item><item><title>Azure Open AI - Increase Performance and reduce per call latency</title><link>https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/</link><pubDate>Thu, 25 Jan 2024 11:39:17 +1100</pubDate><guid>https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/</guid><description>&lt;img src="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/cover.jpg" alt="Featured image of post Azure Open AI - Increase Performance and reduce per call latency" />&lt;blockquote>
+&lt;p>I am a Microsoft employee, but the views expressed here are mine and not those of my employer.&lt;/p>
+&lt;/blockquote>
+&lt;p>I have been working with some clients that are new to Azure Open AI and they have been asking me about how to increase performance and reduce per call latency within the service. Usually I would talk them through &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency" target="_blank" rel="noopener"
+>this&lt;/a> Microsoft article. But I thought I would go one step further with this article and use Python and test calls demonstrate the performance and latency of Azure Open AI.&lt;/p>
+&lt;h2 id="tldr">TLDR&lt;/h2>
+&lt;p>If the performance and per call latency in Azure Open AI is not meeting you expectations, then make these changes, if possible in this order&lt;/p>
+&lt;ul>
+&lt;li>If you are creating a Chat bot or chat experience, enable stream mode in the call.&lt;/li>
+&lt;li>Use the latest models in the &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models#gpt-35-models" target="_blank" rel="noopener"
+>GPT-3.5 Turbo model series&lt;/a>.&lt;/li>
+&lt;li>Reduce the amount of completion tokens in the model response.&lt;/li>
+&lt;li>Use the max_tokens and stop parameters in the call.&lt;/li>
+&lt;/ul>
+&lt;h2 id="streaming">Streaming&lt;/h2>
+&lt;p>The below is taken from &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency#streaming" target="_blank" rel="noopener"
+>https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency#streaming&lt;/a>;&lt;/p>
+&lt;p>&amp;ldquo;Setting &lt;code>stream: true&lt;/code> in a request makes the service return tokens as soon as they&amp;rsquo;re available, instead of waiting for the full sequence of tokens to be generated. It doesn&amp;rsquo;t change the time to get all the tokens, but it reduces the time for first response. This approach provides a better user experience since end-users can read the response as it is generated.&amp;rdquo;&lt;/p>
+&lt;p>I didn&amp;rsquo;t think there was a need to test this. As I think the premise is sound and there are lots of examples where this provides a great user experience. I.e. ChatGPT.&lt;/p>
+&lt;h2 id="testing-setup">Testing setup&lt;/h2>
+&lt;p>The other 3 items in the TLDR we are going to test.&lt;/p>
+&lt;p>We will be completing all of the test against Azure Open AI completions endpoint. All of the test were conducted with the following;&lt;/p>
+&lt;ol>
+&lt;li>All tests were run on a VM deployed into the Australia East region.&lt;/li>
+&lt;li>The Azure Open AI service was deployed to the Australia East region.&lt;/li>
+&lt;li>The code that was used to create the tests can be found &lt;a class="link" href="https://github.com/fredderf204/aoai-tester" target="_blank" rel="noopener"
+>here&lt;/a>.&lt;/li>
+&lt;li>The Python code was run as part of a cronjob on the VM. I modified the crontab file and add a new line like this; &lt;code> * * * * * /usr/bin/python3 /home/fredderf204/aoai-tester/app.py &amp;gt;&amp;gt; /home/fredderf204/aoai-tester/aoai-tester.log 2&amp;gt;&amp;amp;1&lt;/code>. This means that the test will run every 1 minute and the output (both STDOUT and STDERR) will be written to a log file.&lt;/li>
+&lt;li>I collected the data from the log file and put it into a spreadsheet.&lt;/li>
+&lt;/ol>
+&lt;h2 id="another-way-to-monitor-per-call-latency">Another way to monitor per call latency&lt;/h2>
+&lt;p>I will be writing the results of my python code to a log file on the VM. I did this because I thought it would be a good way to record and measure the results.&lt;/p>
+&lt;p>But there is another way to monitor per call latency, and it&amp;rsquo;s with Azure Monitor. &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/monitoring" target="_blank" rel="noopener"
+>This&lt;/a> article goes into detail about how to do this. And the TLDR is that you can simply run your code against Azure Open AI and see the per call latency by clicking &amp;ldquo;Metrics&amp;rdquo; in the Azure Portal under the Monitoring section. Then select the latency metric and you will see something like this;&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/1.jpg"
+width="266"
+height="302"
+srcset="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/1_hu4ded66e4fb6ece4ee2c12a38e29d21c6_15397_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/1_hu4ded66e4fb6ece4ee2c12a38e29d21c6_15397_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Per call latency"
+class="gallery-image"
+data-flex-grow="88"
+data-flex-basis="211px"
+>&lt;/p>
+&lt;p>You can further filter by deployment, or api version, or endpoint. But to be honest, the only reason I didn&amp;rsquo;t do this was because I didn&amp;rsquo;t know how to get the data into excel to create the graphs. But I am sure there is a way.&lt;/p>
+&lt;h2 id="test-1---use-the-latest-models-in-the-gpt-35-turbo-model-series">Test 1 - Use the latest models in the GPT-3.5 Turbo model series&lt;/h2>
+&lt;p>The first test will be a per call latency test comparing GPT-4 vs GPT-3.5 Turbo. The general advice I give to my clients is the try GPT-3.5 Turbo model series to see if it meets your needs. If it does not, there try out GPT-4 model series. You will see below that GPT-3.5 Turbo is more performant and has a lower per call latency compared to GPT-4. But GPT-4 is more accurate, so it&amp;rsquo;s a trade off.&lt;/p>
+&lt;p>In the below chart I sent 20 requests to each model and recorded the results. As mentioned previously, I used the code in this repo &lt;a class="link" href="https://github.com/fredderf204/aoai-tester" target="_blank" rel="noopener"
+>here&lt;/a> and used this prompt &lt;code>write a 500 word short story&lt;/code>. I chose this prompt for 2 reasons;&lt;/p>
+&lt;ol>
+&lt;li>It&amp;rsquo;s simple&lt;/li>
+&lt;li>It&amp;rsquo;s going to create a fairly large amount completion tokens.&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/2.jpg"
+width="481"
+height="289"
+srcset="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/2_huea26b5babfc1ed661344610707acb867_23891_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/2_huea26b5babfc1ed661344610707acb867_23891_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="GPT-4 vs GPT-3.5 Turbo"
+class="gallery-image"
+data-flex-grow="166"
+data-flex-basis="399px"
+>&lt;/p>
+&lt;p>GPT-4 had an average end to end latency of 53.13 seconds and generated an average of 687.55 completion tokens per call.&lt;/p>
+&lt;p>GPT-3.5 Turbo had an average end to end latency of 7.77 seconds and generated an average of 756.9 completion tokens per call.&lt;/p>
+&lt;blockquote>
+&lt;p>As you can see GPT-3.5 Turbo is an order of magnitude faster than GPT-4. If you can switch from GPT-4 to GPT-3.5 Turbo, then you will see a quite an improvement in performance and per call latency. Which is why this is the first recommendation I make to my clients.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="test-2---reduce-the-amount-of-completion-tokens-in-the-model-response">Test 2 - Reduce the amount of completion tokens in the model response&lt;/h2>
+&lt;p>For this test, we will take the previous results from GPT-4 and the prompt &lt;code>write a 500 word short story&lt;/code> and compare it to the same model but use a modified prompt &lt;code>write a 300 word short story&lt;/code>. The only difference between the 2 prompts is the number of words in the story. Which should result in fewer completion tokens being generated.&lt;/p>
+&lt;p>Again we sent 20 calls to the service and recorded the results.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/3.jpg"
+width="482"
+height="287"
+srcset="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/3_hu34e3511e28d0518b5e79d5eda2c39df4_24641_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/3_hu34e3511e28d0518b5e79d5eda2c39df4_24641_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="GPT-4 - 500 vs 300 words"
+class="gallery-image"
+data-flex-grow="167"
+data-flex-basis="403px"
+>&lt;/p>
+&lt;p>Prompt 1 (500 word short story) resulted in an average end to end latency of 53.13 seconds and generated an average of 687.55 completion tokens per call.&lt;/p>
+&lt;p>Prompt 2 (300 word short story) resulted in an average end to end latency of 25.33 seconds and generated an average of 434.05 completion tokens per call.&lt;/p>
+&lt;blockquote>
+&lt;p>As you can see, there is a direct correlation between the amount of completion tokens and the end to end latency. The more completion tokens, the longer the end to end latency. So if you can reduce the amount of completion tokens, you will see a reduction in end to end latency.&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency#generation-size-and-max-tokens" target="_blank" rel="noopener"
+>This&lt;/a> article goes into more detail about why this is.&lt;/p>
+&lt;h2 id="test-3---use-the-max_tokens-and-stop-parameters">Test 3 - Use the max_tokens and stop parameters&lt;/h2>
+&lt;p>For this test, one set of requests will have the max_tokens and stop parameters set and the other will not. We will use a new prompt which is larger and uses 2 shot examples. Both prompts were run against GPT-4. Please see the prompt below;&lt;/p>
+&lt;p>&lt;code>write a 300 word story that begins with Once upon a time and ends with The End \n\nExample 1: Once upon a time, in a faraway land, there lived a young girl named Lila. She was a curious and adventurous girl who loved to explore the world around her. One day, while wandering through the woods, she stumbled upon a hidden cave. The entrance was small, but Lila was determined to explore it. She squeezed through the narrow opening and found herself in a large cavern. The walls were covered in glittering crystals that sparkled in the dim light. Lila was amazed by the beauty of the cave and decided to explore further.\n\nAs she walked deeper into the cave, she noticed a faint glow in the distance. She followed the light and soon found herself in a large chamber. In the center of the room was a glowing orb that pulsed with a soft light. Lila approached the orb and reached out to touch it. Suddenly, she was enveloped in a bright light and felt herself being lifted off the ground.\n\nWhen the light faded, Lila found herself in a strange new world. The sky was a deep shade of purple, and the trees were made of crystal. She looked around in wonder and realized that she had been transported to a magical realm.\n\nLila spent many years exploring this new world, meeting strange creatures and having incredible adventures. But eventually, she grew homesick and decided to return to her own world. She approached the glowing orb once again and was enveloped in a bright light. When the light faded, she found herself back in the cave where she had started.\n\nLila emerged from the cave, changed forever by her incredible journey. She went on to live a long and happy life, but she never forgot the magic of that other world. And so, we come to the end of our story. The End.\n\nExample 2: Once upon a time, in the kingdom of Uriel, lived an old shoemaker named Bartolo. He was a quiet man who lived a simple life, crafting the most beautiful shoes to earn his livelihood. But Bartolo had a secret - he could weave magic into his shoes, giving them abilities far beyond any regular footwear. And so, Uriel\'s inhabitants adored his creations, no one knowing Bartolo was actually a wizard in disguise.\n\nOne gloomy evening, Bartolo noticed a young girl sobbing outside his shop. Her cloth shoes were ripped and worn, her feet bloodied from the rough city cobblestones. Bartolo\'s heart squeezed at the sight. He called out to her, promising a pair of new shoes.\n\nThe next day, Bartolo presented the girl, Lily, with enchanted dancing shoes. They would protect her feet and lead her heart to happiness. She looked up at Bartolo, her eyes wet with gratitude, and danced away, leaving a trail of soft laughter and twinkling sparkles.\n\nWeeks later, a royal proclamation announced a grand ball to choose a prince\'s bride, and Lily decided to attend. That night, her gifted shoes guided her as she danced with a grace that awoke an otherworldly charm. The prince was instantly smitten by Lily\'s uniqueness and chose her as his bride.\n\nOn their wedding, Bartolo presented a wondrous pair of shoes to Lily as a wedding gift - shoes embedded with everlasting love and compassion. Witnessing Lily\'s happiness, Bartolo felt his life had been worthwhile. He had used his magic to give joy, and in return, he was filled with contentment.\n\nYears later, after living a fulfilled magical life, Bartolo passed away. But through Lily, his magical shoes, and the little happiness they brought to this kingdom, his legacy lived on, forever woven into the fabric of Uriel\'s tales. Thus, our story concludes, until we meet again under the moonlit pages of another tale. The End.&lt;/code>&lt;/p>
+&lt;p>For the second set of calls, we will set the max_token parameter to 450 and stop to &lt;code>The End&lt;/code>. This means that the model will stop generating tokens 3 ways;&lt;/p>
+&lt;ol>
+&lt;li>When it finishes generating the response&lt;/li>
+&lt;li>When it hits the stop sequence of &lt;code>The End&lt;/code>.&lt;/li>
+&lt;li>When it reaches 450 tokens completion tokens.&lt;/li>
+&lt;/ol>
+&lt;p>This should result in fewer completion tokens being generated.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/4.jpg"
+width="482"
+height="289"
+srcset="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/4_hu8cd8dd39d68aebbe6fffe99d9aeb5600_23692_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/4_hu8cd8dd39d68aebbe6fffe99d9aeb5600_23692_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Max tokens and stop"
+class="gallery-image"
+data-flex-grow="166"
+data-flex-basis="400px"
+>&lt;/p>
+&lt;p>Call set 1 (no max_tokens or stop) resulted in an average end to end latency of 38.48 seconds and generated an average of 438.35 completion tokens per call.&lt;/p>
+&lt;p>Call set 2 (max_tokens = 450 and stop = The End) resulted in an average end to end latency of 34.55 seconds and generated an average of 426.8 completion tokens per call.&lt;/p>
+&lt;blockquote>
+&lt;p>I know it a little hard to tell in the chart, but there was a slight improvement in end to end latency and a slight reduction in the amount of completion tokens. This is why I would recommend this as the last thing to try. As it&amp;rsquo;s not going to have a huge impact on performance or per call latency in comparison to the other 2 items above.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="large-prompt-tokens-have-little-impact-on-performance-and-per-call-latency">Large prompt tokens have little impact on performance and per call latency&lt;/h2>
+&lt;p>Going into this experiment, I though the amount of prompt tokens would have a large impact on performance and per call latency. Turns out that is not the case! I did 1 final test. Against GPT-4 I used our original prompt of &lt;code>write a 500 word short story&lt;/code> and ran a test set. Then I used another prompt that started out the same, and I added a random set of 5000 words to the end of the prompt.&lt;/p>
+&lt;p>This resulted in first prompt having 14 prompt tokens and the second prompt having on average 7091 prompt tokens. I ran 20 calls against each prompt and recorded the results.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/5.jpg"
+width="481"
+height="289"
+srcset="https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/5_hu004816701bac5bf577e2e2772e8d6a81_25888_480x0_resize_q75_box.jpg 480w, https://mfblog.au/p/azure-open-ai-increase-performance-and-reduce-per-call-latency/5_hu004816701bac5bf577e2e2772e8d6a81_25888_1024x0_resize_q75_box.jpg 1024w"
+loading="lazy"
+alt="Large prompt tokens"
+class="gallery-image"
+data-flex-grow="166"
+data-flex-basis="399px"
+>&lt;/p>
+&lt;p>Call set 1 (14 prompt tokens) resulted in an average end to end latency of 53.13 seconds and generated an average of 687.55 completion tokens per call. I used the same data as the latest models test.&lt;/p>
+&lt;p>Call set 2 (7091 prompt tokens) resulted in an average end to end latency of 53.47 seconds and generated an average of 813.1 completion tokens per call.&lt;/p>
+&lt;blockquote>
+&lt;p>There seems to be almost no difference in performance or per call latency when using a large amount of prompt tokens. So if you need to use a large amount of prompt tokens, then you should be ok.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="conclusion">Conclusion&lt;/h2>
+&lt;p>I would reccomend everyone go and read &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency" target="_blank" rel="noopener"
+>https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/latency&lt;/a> as it has some great information about how to increase performance and reduce per call latency in Azure Open AI. Which we have just proved with Python in our simple experiments.&lt;/p></description></item></channel></rss>
