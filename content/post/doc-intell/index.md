@@ -1,5 +1,5 @@
 ---
-title: "Automated document processing and fraud detection with Azure."
+title: "Automated document processing and fraud detection with Azure"
 description: "Let's build a sample document processing pipeline using Azure Document Intelligence and Azure Open AI to process financial documents and perform fraud detection."
 date: 2024-03-24T15:23:32+11:00
 image: cover.jpg
