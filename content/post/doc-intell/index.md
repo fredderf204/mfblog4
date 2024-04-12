@@ -33,7 +33,7 @@ The idea behind this post is to show you how to build a simple document processi
 
 The sample I have created will focus on Extraction and Enrichment sections of the above diagram, centred around a financial company who needs to process online applications that have Invoices and Receipts as part of the application process. Please see my diagram below for a high-level overview of the process.
 
-![Michaels Sample](2.jpg)
+![Michaels Sample](2.png)
 
 1. Customers use the financial company's application to apply for a rebate/loan. The application has been coded in Python with [Gradio](https://www.gradio.app/) to create a quick user interface.
 2. The application form data is sent to Azure CosmosDB for storage.
@@ -50,21 +50,21 @@ The application has been coded in Python with [Gradio](https://www.gradio.app/) 
 
 ## 2. Azure CosmosDB
 
-This is a vanilla Azure CosmosDB setup where I just accepted the defaults. I have created a database called `ToDoItems` and two containers called `Items` and `leases`.
+This is a vanilla Azure CosmosDB setup where I just accepted the defaults. I have created a database called `ToDoItems` and two containers called `docs` and `leases`.
 
-> Side Note: I only used `ToDoItems` and `Items` and the database and container names because I was following a quick start guide. You should use more meaningful names for your project.
+> Side Note: I only used `ToDoItems` and `docs` and the database and container names because I was following a quick start guide. You should use more meaningful names for your project.
 
 The `leases` container was created so I can use the [Change Feed Processor](https://docs.microsoft.com/en-us/azure/cosmos-db/change-feed-processor) to trigger the Azure Function when new documents are added to the Invoice and Receipt containers.
 
 ## 3. Azure Blob Storage
 
-I have created two containers in Azure Blob Storage called `docs` and `processed`. The Invoice and Receipt documents are sent to the `docs` container. When Invoice and Receipt documents have been processed, they are moved to a new container in Azure Blob Storage called `processed`.
+I have created two containers in Azure Blob Storage called `docs` and `processed`. The Invoice and Receipt documents are sent to the `invoice` and `receipt` containers respectively. When Invoice and Receipt documents have been processed, they are moved to a new container in Azure Blob Storage called `processed`.
 
 ## 4. Azure Functions
 
-I have created two Azure Functions, one for Invoices and Receipts and one for fraud detection. The docs function is triggered by the new documents in the `docs` container. The functions sends the documents to Azure AI Document Intelligence for processing and results are sent to Azure CosmosDB for storage.
+I have created three Azure Functions, one for invoices and receipts and one for fraud detection. The invoice and receipt function is triggered by the new documents in the `invoice` and `receipt` containers respectively. The functions sends the documents to Azure AI Document Intelligence for processing and results are sent to Azure CosmosDB for storage.
 
-The code for both of these functions can be found in this [GitHub Repo](https://github.com/fredderf204/doc-intel-fraud).
+The code for all of these functions can be found in this [GitHub Repo](https://github.com/fredderf204/doc-intel-fraud).
 
 > Side Note: I used the [Function v2 model for Python](https://techcommunity.microsoft.com/t5/azure-compute-blog/azure-functions-v2-python-programming-model-is-generally/ba-p/3827474), which uses the new decorator model. I found it easier to use than the old model and loved having all three functions and there triggers in the same file.
 
