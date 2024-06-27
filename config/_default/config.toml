@@ -19,3 +19,5 @@ disqusShortname = "hugo-theme-stack"
 googleAnalytics = "G-C4H16BVKJJ"
 
 enableRobotsTXT = false
+
+enableEmoji = true
