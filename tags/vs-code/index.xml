@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>VS Code on MF Azure Blog</title><link>https://mfblog.au/tags/vs-code/</link><description>Recent content in VS Code on MF Azure Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 13 Nov 2023 16:44:06 +1100</lastBuildDate><atom:link href="https://mfblog.au/tags/vs-code/index.xml" rel="self" type="application/rss+xml"/><item><title>Running Azure Functions locally</title><link>https://mfblog.au/p/running-azure-functions-locally/</link><pubDate>Mon, 13 Nov 2023 16:44:06 +1100</pubDate><guid>https://mfblog.au/p/running-azure-functions-locally/</guid><description>&lt;img src="https://mfblog.au/p/running-azure-functions-locally/cover.jpg" alt="Featured image of post Running Azure Functions locally" />&lt;p>Running Azure Functions locally isn&amp;rsquo;t something new, but it&amp;rsquo;s being a while since I&amp;rsquo;ve done it and I thought I&amp;rsquo;d share my experiences with some of the new tools, using Python and triggering local functions using time and queue triggers.&lt;/p>
+&lt;h2 id="tldr">TLDR
+&lt;/h2>&lt;ul>
+&lt;li>Use Visual Studio Code&lt;/li>
+&lt;li>Install the Azure Functions extension&lt;/li>
+&lt;li>Install the Azure Functions Core Tools&lt;/li>
+&lt;li>Install the Azurite&lt;/li>
+&lt;li>Install the Azure Storage Explorer&lt;/li>
+&lt;/ul>
+&lt;h2 id="vs-code">VS Code
+&lt;/h2>&lt;p>If you are developing Azure functions locally, I couldn&amp;rsquo;t recommend &lt;a class="link" href="https://code.visualstudio.com/" target="_blank" rel="noopener"
+>Visual Studio Code&lt;/a> enough. It&amp;rsquo;s a great editor and has a lot of great extensions that make developing Azure Functions locally a breeze. Also it&amp;rsquo;s free and available on your favourite platform - Linux, macOS, and Windows.&lt;/p>
+&lt;h2 id="developing-functions-locally">Developing Functions locally
+&lt;/h2>&lt;p>There is already a great article &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/azure-functions/functions-develop-vs-code?tabs=node-v3%2Cpython-v2%2Cisolated-process&amp;amp;pivots=programming-language-python" target="_blank" rel="noopener"
+>here&lt;/a> on how to develop Azure Functions by using Visual Studio Code.&lt;/p>
+&lt;p>The Azure Functions extension provides these benefits:&lt;/p>
+&lt;ul>
+&lt;li>Edit, build, and run functions on your local development computer.&lt;/li>
+&lt;li>Publish your Azure Functions project directly to Azure.&lt;/li>
+&lt;li>Write your functions in various languages while taking advantage of the benefits of Visual Studio Code.&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>💎 But to develop Azure Functions locally, you must install the &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/azure-functions/functions-run-local" target="_blank" rel="noopener"
+>Azure Functions Core Tools&lt;/a> which enables an integrated local debugging experience. When using the Azure Functions extension, the easiest way to install Core Tools is by running the &lt;code>Azure Functions: Install or Update Azure Functions Core Tools&lt;/code> command from the command pallet.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="python">Python
+&lt;/h2>&lt;p>There isn&amp;rsquo;t anything in particular you need to do make Python work with Azure Functions, but I couldn&amp;rsquo;t recommend enough creating a virtual environment and using the same Python version that Azure Functions use in Azure. This will help with any issues you may have with dependencies once you deploy your Function to Azure.&lt;/p>
+&lt;h2 id="local-debugging">Local debugging
+&lt;/h2>&lt;p>I can&amp;rsquo;t believe that I wasn&amp;rsquo;t doing this from the start. The first few times I would right my Azure Function locally, deploy it to Azure and wait and see if it worked.&lt;/p>
+&lt;blockquote>
+&lt;p>💎 This is a terrible idea and slowed down my development significantly. Once I started to debug locally, I was able to do so much more in a shorter amount of time.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="what-the-heck-is-azurite">What the heck is Azurite?
+&lt;/h2>&lt;p>Have you ever wanted to run and debug your function locally, but your Azure Function needs to interact with Azure Storage?&lt;/p>
+&lt;p>&lt;a class="link" href="https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio" target="_blank" rel="noopener"
+>Azurite&lt;/a> is a great tool that provides a local Azure Storage emulator that emulates the Azure Blob, Queue, and Table services for local development purposes. It is the best way to test your Azure Storage code without going to Azure.&lt;/p>
+&lt;p>For instance, one of my Azure Functions had to write to Azure Blob storage. Azurite come in super handy as it can emulate Azure Blob storage locally. But what I did notice was that Azurite would validate my request to Azure Blob storage, but would not actually create the container and Blob object. But for me, having the request validated is good enough for development.&lt;/p>
+&lt;p>Also starting the Azurite emulator is super easy. Once install via a VSCode extension, look at the bottom of VSCode and you should see some button that look like this&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/running-azure-functions-locally/1.jpg"
+width="981"
+height="121"
+srcset="https://mfblog.au/p/running-azure-functions-locally/1_hu14315052300929959907.jpg 480w, https://mfblog.au/p/running-azure-functions-locally/1_hu1475920295758090139.jpg 1024w"
+loading="lazy"
+alt="Azurite"
+class="gallery-image"
+data-flex-grow="810"
+data-flex-basis="1945px"
+>&lt;/p>
+&lt;p>You simply click on one of those services to start them up.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/running-azure-functions-locally/2.jpg"
+width="969"
+height="128"
+srcset="https://mfblog.au/p/running-azure-functions-locally/2_hu10024019013587252566.jpg 480w, https://mfblog.au/p/running-azure-functions-locally/2_hu15445313313346213980.jpg 1024w"
+loading="lazy"
+alt="Azurite"
+class="gallery-image"
+data-flex-grow="757"
+data-flex-basis="1816px"
+>&lt;/p>
+&lt;p>Speaking of development, Azurite can be run as a docker container, so I can imagine how that could be automated and added to a CI/CD pipeline. This way you can test your app in a pipeline before deploying to Azure, speeding up development ans shortening the dev cycle.&lt;/p>
+&lt;h2 id="how-to-trigger-functions-locally">How to trigger functions locally
+&lt;/h2>&lt;p>Next challenge I faced was how to do trigger these functions locally? One function was setup on a time trigger to run once per day, and the other had a Azure queue trigger.&lt;/p>
+&lt;h3 id="time-trigger">Time trigger
+&lt;/h3>&lt;p>I struggled to find the answer to this on 😞 but buried deep in the comments in this &lt;a class="link" href="https://stackoverflow.com/questions/46556621/what-is-the-simplest-way-to-run-a-timer-triggered-azure-function-locally-once" target="_blank" rel="noopener"
+>thread&lt;/a> I found the answer.&lt;/p>
+&lt;blockquote>
+&lt;p>💎 You have to send a POST request to the local admin endpoint &lt;code>http://localhost:{port}/admin/functions/{function_name}&lt;/code> with &lt;code>Content-Type = application/json&lt;/code> and body of &lt;code>{ &amp;quot;input&amp;quot;: null }&lt;/code>&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://mfblog.au/p/running-azure-functions-locally/3.jpg"
+width="1491"
+height="552"
+srcset="https://mfblog.au/p/running-azure-functions-locally/3_hu17351698946429195242.jpg 480w, https://mfblog.au/p/running-azure-functions-locally/3_hu10135545029362095198.jpg 1024w"
+loading="lazy"
+alt="Postman"
+class="gallery-image"
+data-flex-grow="270"
+data-flex-basis="648px"
+>&lt;/p>
+&lt;p>As you can see above I used Postman to send a POST request to the local admin endpoint of &lt;code>http://localhost:7071/admin/functions/mf-az-feeds&lt;/code>. Also please not that &lt;code>{ &amp;quot;input&amp;quot;: null }&lt;/code> was the only body data that triggered the function. If I sent any other value for the input, the function would not trigger.&lt;/p>
+&lt;h3 id="queue-trigger">Queue trigger
+&lt;/h3>&lt;p>This was slightly simpler, but requires 3 pre-reqs&lt;/p>
+&lt;ul>
+&lt;li>Installing &lt;a class="link" href="https://azure.microsoft.com/en-us/products/storage/storage-explorer/" target="_blank" rel="noopener"
+>Azure Storage Explorer&lt;/a>.&lt;/li>
+&lt;li>Starting up the Azurite queue service in Visual Studio Code.&lt;/li>
+&lt;li>The local.settings.json file on your Function project needs to have the following well-known account and key &lt;code>&amp;quot;storageaccount&amp;quot;: &amp;quot;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;&amp;quot;,&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://mfblog.au/p/running-azure-functions-locally/4.jpg"
+width="539"
+height="558"
+srcset="https://mfblog.au/p/running-azure-functions-locally/4_hu6276408721161633132.jpg 480w, https://mfblog.au/p/running-azure-functions-locally/4_hu14084156098066710254.jpg 1024w"
+loading="lazy"
+alt="Azure Storage Explorer"
+class="gallery-image"
+data-flex-grow="96"
+data-flex-basis="231px"
+>&lt;/p>
+&lt;p>Then I used the Azure Storage Explorer to connect to the local Azurite queue service and crate a new queue with the same name as my queue trigger. Next I dropped a message in that queue, which triggered the function.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/running-azure-functions-locally/5.jpg"
+width="1086"
+height="815"
+srcset="https://mfblog.au/p/running-azure-functions-locally/5_hu16913575210007832731.jpg 480w, https://mfblog.au/p/running-azure-functions-locally/5_hu5359357807391461271.jpg 1024w"
+loading="lazy"
+alt="Azure Storage Explorer"
+class="gallery-image"
+data-flex-grow="133"
+data-flex-basis="319px"
+>&lt;/p>
+&lt;h2 id="conclusion">Conclusion
+&lt;/h2>&lt;p>I hope this helps you with your local Azure Function development. I know it helped me and I&amp;rsquo;m sure I&amp;rsquo;ll be using these tools again in the future.&lt;/p>
+&lt;p>I hope you found this post useful. If you have any questions, feel free to reach out to me on &lt;a class="link" href="https://twitter.com/fredderf204" target="_blank" rel="noopener"
+>Twitter&lt;/a> or &lt;a class="link" href="https://www.linkedin.com/in/1michaelfriedrich/" target="_blank" rel="noopener"
+>Linkedin&lt;/a>.&lt;/p></description></item></channel></rss>

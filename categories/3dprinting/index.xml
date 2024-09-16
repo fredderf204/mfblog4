@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>3dprinting on MF Azure Blog</title><link>https://mfblog.au/categories/3dprinting/</link><description>Recent content in 3dprinting on MF Azure Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 13 Nov 2023 11:55:10 +1100</lastBuildDate><atom:link href="https://mfblog.au/categories/3dprinting/index.xml" rel="self" type="application/rss+xml"/><item><title>3d printed event badge</title><link>https://mfblog.au/p/3d-printed-event-badge/</link><pubDate>Mon, 13 Nov 2023 11:55:10 +1100</pubDate><guid>https://mfblog.au/p/3d-printed-event-badge/</guid><description>&lt;img src="https://mfblog.au/p/3d-printed-event-badge/cover.jpg" alt="Featured image of post 3d printed event badge" />&lt;p>I&amp;rsquo;ve been toying with the idea of making a custom event badge for a while now, and I finally got around to it!&lt;/p>
+&lt;p>The reason being is that I love connecting with people, but I hate constantly getting my phone out of my pocket to show my Linkedin QR code. So I thought it would be cool to have a badge with a QR code on it that people could scan, get my details and connect on Linkedin 😎&lt;/p>
+&lt;h2 id="tldr">TLDR
+&lt;/h2>&lt;ul>
+&lt;li>Take a screenshot of your LinkedIn QR code.&lt;/li>
+&lt;li>Convert it to a SVG image. I used &lt;a class="link" href="https://www.adobe.com/express/feature/image/convert/jpg-to-svg" target="_blank" rel="noopener"
+>Adobe jpg-to-svg&lt;/a>.&lt;/li>
+&lt;li>Convert the SVG to a STL file. I used &lt;a class="link" href="https://imagetostl.com/convert/file/svg/to/stl" target="_blank" rel="noopener"
+>imagetostl&lt;/a>.&lt;/li>
+&lt;li>Make the event badge using 3d modelling software. I used &lt;a class="link" href="https://www.tinkercad.com/" target="_blank" rel="noopener"
+>Tinkercad&lt;/a>&lt;/li>
+&lt;li>Print STL to physical object 🍾&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>❗The last step requires a 3d printer.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="getting-your-linkedin-qr-code">Getting your LinkedIn QR code
+&lt;/h2>&lt;p>This process wasn&amp;rsquo;t too difficult, but it was a bit of a pain. I&amp;rsquo;m sure there&amp;rsquo;s a better way to do it, but this is what I did.&lt;/p>
+&lt;ol>
+&lt;li>Open the Linkedin app on your phone.&lt;/li>
+&lt;li>Click on the search bar on the top of the screen.&lt;/li>
+&lt;li>Click on the QR code icon in the top right corner.&lt;/li>
+&lt;li>Screenshot the QR code.&lt;/li>
+&lt;li>Email the screenshot to yourself.&lt;/li>
+&lt;li>Crop the QR code out of the screenshot. like below:&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="https://mfblog.au/p/3d-printed-event-badge/1.jpg"
+width="560"
+height="560"
+srcset="https://mfblog.au/p/3d-printed-event-badge/1_hu17120894655480034101.jpg 480w, https://mfblog.au/p/3d-printed-event-badge/1_hu16219486632698519449.jpg 1024w"
+loading="lazy"
+alt="QR code"
+class="gallery-image"
+data-flex-grow="100"
+data-flex-basis="240px"
+>&lt;/p>
+&lt;h2 id="converting-the-qr-code-to-a-svg">Converting the QR code to a SVG
+&lt;/h2>&lt;p>I used &lt;a class="link" href="https://www.adobe.com/express/feature/image/convert/jpg-to-svg" target="_blank" rel="noopener"
+>Adobe jpg-to-svg&lt;/a> to convert the QR code to a SVG image. It&amp;rsquo;s a free online tool that does the job well. Not too much to see about this process, just upload the image and download the SVG.&lt;/p>
+&lt;h2 id="converting-the-svg-to-a-stl">Converting the SVG to a STL
+&lt;/h2>&lt;p>I used &lt;a class="link" href="https://imagetostl.com/convert/file/svg/to/stl" target="_blank" rel="noopener"
+>imagetostl&lt;/a> to convert the SVG to a STL file. It&amp;rsquo;s a free online tool that does the job well.&lt;/p>
+&lt;p>The reason we are converting this file into a STL, is so I can import it into &lt;a class="link" href="https://www.tinkercad.com/" target="_blank" rel="noopener"
+>Tinkercad&lt;/a> to create the badge. If you are using another 3d modelling tool that can import SVG files, you can skip this step.&lt;/p>
+&lt;ul>
+&lt;li>Go to &lt;a class="link" href="https://imagetostl.com/convert/file/svg/to/stl" target="_blank" rel="noopener"
+>imagetostl&lt;/a>&lt;/li>
+&lt;li>Upload your SVG file&lt;/li>
+&lt;li>Select &lt;strong>Invert Output&lt;/strong> like below and convert&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://mfblog.au/p/3d-printed-event-badge/2.jpg"
+width="1280"
+height="673"
+srcset="https://mfblog.au/p/3d-printed-event-badge/2_hu820003333123328390.jpg 480w, https://mfblog.au/p/3d-printed-event-badge/2_hu6759175566681641135.jpg 1024w"
+loading="lazy"
+alt="imagetostl"
+class="gallery-image"
+data-flex-grow="190"
+data-flex-basis="456px"
+>&lt;/p>
+&lt;ul>
+&lt;li>Your outpt put should look like the below image. Download the STL file.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://mfblog.au/p/3d-printed-event-badge/3.jpg"
+width="1280"
+height="671"
+srcset="https://mfblog.au/p/3d-printed-event-badge/3_hu3878403238248483200.jpg 480w, https://mfblog.au/p/3d-printed-event-badge/3_hu2960177444059940597.jpg 1024w"
+loading="lazy"
+alt="imagetostl"
+class="gallery-image"
+data-flex-grow="190"
+data-flex-basis="457px"
+>&lt;/p>
+&lt;h2 id="making-the-badge">Making the badge
+&lt;/h2>&lt;p>I used &lt;a class="link" href="https://www.tinkercad.com/" target="_blank" rel="noopener"
+>Tinkercad&lt;/a> to make the badge. I find Tinkercad to be the easiest 3d modelling tool to use, but you can use whatever you like. I have tried other (Blender, Fusion 360, etc) but I find them to be too complicated for my needs.&lt;/p>
+&lt;ul>
+&lt;li>Open Tinkercad and create a flat card to put your QR code on. I made mine 110mm x 50mm x 1mm.&lt;/li>
+&lt;/ul>
+&lt;blockquote>
+&lt;p>💡Tip: 1mm is too thin. It bends too much and I feel like it could break. Next time I will make it 2mm thick.&lt;/p>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>
+&lt;p>I also added a hole to the top so I could attach a lanyard to it.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Next I imported my QR Code and place it on the card. I also made it 1mm thick.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Also I added my first name and company to the right of the card. I used the default font and made it 1mm high.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Lastly I downloaded the STL file to my PC.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://mfblog.au/p/3d-printed-event-badge/4.jpg"
+width="1280"
+height="669"
+srcset="https://mfblog.au/p/3d-printed-event-badge/4_hu1272408845340619234.jpg 480w, https://mfblog.au/p/3d-printed-event-badge/4_hu7989268763131746955.jpg 1024w"
+loading="lazy"
+alt="Tinkercad"
+class="gallery-image"
+data-flex-grow="191"
+data-flex-basis="459px"
+>&lt;/p>
+&lt;h2 id="printing-the-badge">Printing the badge
+&lt;/h2>&lt;blockquote>
+&lt;p>💡Tip: The printing process will vary depending on what 3d printer you have. I have a Bambu Lab P1P and the Bambu Lab AMS, which means I can print in multiple colours. I printed the card in white and the QR code and lettering in black.&lt;/p>
+&lt;/blockquote>
+&lt;ul>
+&lt;li>
+&lt;p>Open the downloaded STL in Bambu Studio.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Add the desired colours to the STL.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Print the STL using defaults.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://mfblog.au/p/3d-printed-event-badge/5.jpg"
+width="1280"
+height="694"
+srcset="https://mfblog.au/p/3d-printed-event-badge/5_hu13987395775424986173.jpg 480w, https://mfblog.au/p/3d-printed-event-badge/5_hu5834758347427480443.jpg 1024w"
+loading="lazy"
+alt="Bambu Studio"
+class="gallery-image"
+data-flex-grow="184"
+data-flex-basis="442px"
+>&lt;/p>
+&lt;p>and 27 minutes later, you have your event badge!&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/3d-printed-event-badge/6.jpg"
+width="1008"
+height="567"
+srcset="https://mfblog.au/p/3d-printed-event-badge/6_hu14907444488167859894.jpg 480w, https://mfblog.au/p/3d-printed-event-badge/6_hu9405409087290504743.jpg 1024w"
+loading="lazy"
+alt="Badge"
+class="gallery-image"
+data-flex-grow="177"
+data-flex-basis="426px"
+>&lt;/p>
+&lt;h2 id="conclusion">Conclusion
+&lt;/h2>&lt;p>I&amp;rsquo;m really happy with how the badge turned out. I&amp;rsquo;ve already used it at a few events and it&amp;rsquo;s been a great conversation starter. I&amp;rsquo;ve also had a few people ask me how I made it, so I thought I would write this blog post to share the process.&lt;/p>
+&lt;p>I hope you found this post useful. If you have any questions, feel free to reach out to me on &lt;a class="link" href="https://twitter.com/fredderf204" target="_blank" rel="noopener"
+>Twitter&lt;/a> or &lt;a class="link" href="https://www.linkedin.com/in/1michaelfriedrich/" target="_blank" rel="noopener"
+>Linkedin&lt;/a>.&lt;/p></description></item></channel></rss>

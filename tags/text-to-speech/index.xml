@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Text to Speech on MF Azure Blog</title><link>https://mfblog.au/tags/text-to-speech/</link><description>Recent content in Text to Speech on MF Azure Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 14 Dec 2023 13:27:03 +1100</lastBuildDate><atom:link href="https://mfblog.au/tags/text-to-speech/index.xml" rel="self" type="application/rss+xml"/><item><title>Using SSML with Azure AI Speech service</title><link>https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/</link><pubDate>Thu, 14 Dec 2023 13:27:03 +1100</pubDate><guid>https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/</guid><description>&lt;img src="https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/cover.jpeg" alt="Featured image of post Using SSML with Azure AI Speech service" />&lt;p>I have recently created a webpage that takes news articles from places like &lt;a class="link" href="https://azurefeeds.com/" target="_blank" rel="noopener"
+>Azure Feeds&lt;/a> and creates a daily summary of them using &lt;a class="link" href="https://azure.microsoft.com/en-us/products/ai-services/openai-service" target="_blank" rel="noopener"
+>Azure Open AI&lt;/a>, which you can read about &lt;a class="link" href="https://fredderf204.github.io/mfblog4/p/ai-generated-azure-news-summary/" target="_blank" rel="noopener"
+>here&lt;/a>. But I want to make these summaries multi-modal and have them read out to me, so I can listen to them on the go. So I thought I&amp;rsquo;d use &lt;a class="link" href="https://azure.microsoft.com/en-us/services/cognitive-services/speech-services/" target="_blank" rel="noopener"
+>Azure AI Speech&lt;/a> to convert the text to speech.&lt;/p>
+&lt;h2 id="tldr">TLDR
+&lt;/h2>&lt;ul>
+&lt;li>What is Azure AI Speech service&lt;/li>
+&lt;li>What is SSML&lt;/li>
+&lt;li>How to use SSML with Azure AI Speech service&lt;/li>
+&lt;li>Sample code&lt;/li>
+&lt;/ul>
+&lt;h2 id="what-is-azure-ai-speech-service">What is Azure AI Speech service
+&lt;/h2>&lt;p>&lt;a class="link" href="https://azure.microsoft.com/en-us/services/cognitive-services/speech-services/" target="_blank" rel="noopener"
+>Azure AI Speech&lt;/a> is a collection of speech-to-text and text-to-speech APIs that enables developers to add speech capabilities to their applications. It supports 125 languages and variants, and 60+ standard and custom voice fonts.&lt;/p>
+&lt;h2 id="what-is-ssml">What is SSML
+&lt;/h2>&lt;p>&lt;a class="link" href="https://www.w3.org/TR/speech-synthesis/" target="_blank" rel="noopener"
+>Speech Synthesis Markup Language (SSML)&lt;/a> is an XML-based markup language that provides a standard way to mark up text for the generation of synthetic speech. SSML is a W3C specification that is supported by all major speech synthesis engines.&lt;/p>
+&lt;p>Microsoft has a great article &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/speech-synthesis-markup" target="_blank" rel="noopener"
+>here&lt;/a> on SSML and it&amp;rsquo;s primary use cases.&lt;/p>
+&lt;ul>
+&lt;li>Controlling pronunciation&lt;/li>
+&lt;li>Choosing the voice&lt;/li>
+&lt;li>Define the input text structure&lt;/li>
+&lt;/ul>
+&lt;p>Controlling the pronunciation can bee really useful if you work in a domain/industry that has a lot of acronyms or jargon. For example, I work in the IT industry and Microsoft, where there are a lot of acronyms. So I can use SSML to tell Azure AI Speech how to pronounce them correctly.&lt;/p>
+&lt;p>Choosing the voice is almost my favourite part. I love looking through the catalog of voices and choosing the one that I like the most. For the Azure AI Speech service, you can choose from 60+ standard and custom voice fonts. To find out what standard voices are available in your region, you can run the below command in your shell;&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">curl --location --request GET &lt;span class="s1">&amp;#39;https://southeastasia.tts.speech.microsoft.com/cognitiveservices/voices/list&amp;#39;&lt;/span> &lt;span class="se">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="se">&lt;/span>--header &lt;span class="s1">&amp;#39;Ocp-Apim-Subscription-Key: xxxx-yyyy-zzzz&amp;#39;&lt;/span> &lt;span class="p">|&lt;/span> jq &lt;span class="s1">&amp;#39;.[] | select(.Locale | contains (&amp;#34;en-NZ&amp;#34;))&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>The above command sends a GET request to &lt;a class="link" href="https://southeastasia.tts.speech.microsoft.com/cognitiveservices/voices/list" target="_blank" rel="noopener"
+>https://southeastasia.tts.speech.microsoft.com/cognitiveservices/voices/list&lt;/a>, then pipes the output to jq, which is a lightweight and flexible command-line JSON processor. The jq command filters the output to only show the voices that are available in the en-NZ locale.&lt;/p>
+&lt;p>Please replace southeastasia with the region that you have deployed your Speech service to and replace the Ocp-Apim-Subscription-Key with your key. You can find your key in the Azure portal under your Speech service resource.&lt;/p>
+&lt;p>You can also change the locale to the one that you want to use and you will get a list of voices that are available for you to use.&lt;/p>
+&lt;blockquote>
+&lt;p>💎 And what&amp;rsquo;s even better, you can train a custom neural voice if you wish &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/custom-neural-voice" target="_blank" rel="noopener"
+>https://learn.microsoft.com/en-us/azure/ai-services/speech-service/custom-neural-voice&lt;/a> or create a personal AI generated replication of your voice &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/personal-voice-overview" target="_blank" rel="noopener"
+>https://learn.microsoft.com/en-us/azure/ai-services/speech-service/personal-voice-overview&lt;/a>.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="how-to-use-ssml-with-azure-ai-speech-service">How to use SSML with Azure AI Speech service
+&lt;/h2>&lt;p>I am new to Azure AI Speech service and SSML. The best way I have found to interact with Azure AI Speech service is to use the &lt;a class="link" href="https://speech.microsoft.com/" target="_blank" rel="noopener"
+>Speech Studio&lt;/a>. Once in there find the Text to speech section, then select Audio Content creation.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/1.jpg"
+width="1148"
+height="634"
+srcset="https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/1_hu2517780787718769033.jpg 480w, https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/1_hu14945864059224025288.jpg 1024w"
+loading="lazy"
+alt="Speech Studio"
+class="gallery-image"
+data-flex-grow="181"
+data-flex-basis="434px"
+>&lt;/p>
+&lt;p>Next you can create a new file or folder. Click on new Text file.&lt;/p>
+&lt;p>Once in the editor you can enter your text and then select the voice that you want to use. At this point, if you don&amp;rsquo;t want to use SSML you don&amp;rsquo;t have to. You can just use the default experience and happily create an audio file from text. But if you want to use SSML, you can click on the SSML button and enter your SSML code.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/2.jpg"
+width="1182"
+height="654"
+srcset="https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/2_hu16918050583229917772.jpg 480w, https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/2_hu13132619000443075414.jpg 1024w"
+loading="lazy"
+alt="Speech Studio"
+class="gallery-image"
+data-flex-grow="180"
+data-flex-basis="433px"
+>&lt;/p>
+&lt;p>Once you have entered your SSML code, you can click on the play button to hear what it sounds like. If you are happy with it, you can then click on the export button to download the audio file, plain text or the SSML code.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/3.jpg"
+width="1176"
+height="661"
+srcset="https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/3_hu6952675382275594320.jpg 480w, https://mfblog.au/p/using-ssml-with-azure-ai-speech-service/3_hu9249413881495056993.jpg 1024w"
+loading="lazy"
+alt="Speech Studio"
+class="gallery-image"
+data-flex-grow="177"
+data-flex-basis="426px"
+>&lt;/p>
+&lt;h2 id="sample-code">Sample code
+&lt;/h2>&lt;p>Now that I have some familiarity with Azure AI Speech service and SSML, I can now use it in my code. I have created a simple Python script that takes a string as input and converts it to an audio file using Azure AI Speech service. It then saves the audio into Azure BLOB storage as an MP3.&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">import&lt;/span> &lt;span class="nn">azure.cognitiveservices.speech&lt;/span> &lt;span class="k">as&lt;/span> &lt;span class="nn">speechsdk&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kn">from&lt;/span> &lt;span class="nn">azure.storage.blob&lt;/span> &lt;span class="kn">import&lt;/span> &lt;span class="n">BlobServiceClient&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">BlobClient&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ContainerClient&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">ContentSettings&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Connect to Azure BLOB storage&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">storageaccount&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s1">&amp;#39;DefaultEndpointsProtocol=https;AccountName=aaa-bbb-ccc;AccountKey=xxx-yyy-zzz==;EndpointSuffix=core.windows.net&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">blob_service_client&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">BlobServiceClient&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_connection_string&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">storageaccount&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Creates an instance of a speech config with specified subscription key and service region.&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">speech_key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">service_region&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;ddd-eee-fff&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;australiaeast&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">speech_config&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speechsdk&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">SpeechConfig&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">subscription&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">speech_key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">region&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">service_region&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Create ssml string&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">ssml_string&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s1">&amp;#39;&amp;#39;&amp;#39;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;lt;speak xmlns=&amp;#34;http://www.w3.org/2001/10/synthesis&amp;#34; xmlns:mstts=&amp;#34;http://www.w3.org/2001/mstts&amp;#34; xmlns:emo=&amp;#34;http://www.w3.org/2009/10/emotionml&amp;#34; version=&amp;#34;1.0&amp;#34; xml:lang=&amp;#34;en-US&amp;#34;&amp;gt;&amp;lt;voice name=&amp;#34;en-US-GuyNeural&amp;#34;&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;mstts:express-as style=&amp;#34;newscast&amp;#34;&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">Hello and welcome to the daily AI Generated News Summary for Thursday 8th December 2024 . I&amp;#39;m your host Guy and here are today&amp;#39;s headlines
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;lt;/mstts:express-as&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;/voice&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;lt;voice name=&amp;#34;en-US-JennyNeural&amp;#34;&amp;gt;&amp;lt;mstts:express-as style=&amp;#34;newscast&amp;#34;&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">Thanks Guy. I&amp;#39;m Jenny and today we have a new article by azurefeeds entitled hello
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;lt;/mstts:express-as&amp;gt;&amp;lt;/voice&amp;gt;&amp;lt;/speak&amp;gt;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="s1">&amp;#39;&amp;#39;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Send string to Azure speech service&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">speech_synthesizer&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speechsdk&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">SpeechSynthesizer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">speech_config&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">speech_config&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">audio_config&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">result&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speech_synthesizer&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">speak_ssml&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ssml_string&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Get audio data&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">audio_data&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">result&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">audio_data&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1"># Upload audio to Azure BLOB storage&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">mp3upload&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">blob_service_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_blob_client&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">container&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;20231211&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">blob&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">today&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s1">&amp;#39;.mp3&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">mp3upload&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">upload_blob&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">audio_data&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">overwrite&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">content_settings&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ContentSettings&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">content_type&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;audio/mpeg&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;blockquote>
+&lt;p>💎 To test out this code, you can create the SSML in the Speech Studio and then copy and paste it the SSML into the ssml_string variable.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="how-am-i-using-this">How am I using this
+&lt;/h2>&lt;p>I have added this process into my Azure Function that creates the daily summary of Azure news. As you can see above, I tried to make it sound like a News desk by having a host (Guy) and a presenter (Jenny). So in my code, I have Guy do a little intro, then I have Jenny read all of the articles, then I have Guy do a little outro. You can see my full code here: &lt;a class="link" href="https://github.com/fredderf204/ai-gen-news-summary/blob/main/html-email/__init__.py" target="_blank" rel="noopener"
+>https://github.com/fredderf204/ai-gen-news-summary/blob/main/html-email/&lt;strong>init&lt;/strong>.py&lt;/a> and I have a put a snippet below;&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-python" data-lang="python">&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">blob_service_client&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">BlobServiceClient&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">from_connection_string&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">storageaccount&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">today&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">datetime&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">today&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">strftime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;%Y%m&lt;/span>&lt;span class="si">%d&lt;/span>&lt;span class="s1">&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">dow&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">datetime&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">now&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">strftime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;%A&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">dateword&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">datetime&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">now&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">strftime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;%B &lt;/span>&lt;span class="si">%d&lt;/span>&lt;span class="s1">, %Y&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">container_client&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">blob_service_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_container_client&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">today&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ssml_string&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;&amp;lt;speak xmlns=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">http://www.w3.org/2001/10/synthesis&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2"> xmlns:mstts=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">http://www.w3.org/2001/mstts&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2"> xmlns:emo=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">http://www.w3.org/2009/10/emotionml&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2"> version=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">1.0&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2"> xml:lang=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">en-US&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;&amp;lt;voice name=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">en-US-GuyNeural&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;mstts:express-as style=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">newscast&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;Hello and welcome to the daily AI Generated News Summary for &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">dow&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s2">&amp;#34; &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">dateword&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s2">&amp;#34;. I&amp;#39;m your host Guy&amp;lt;/mstts:express-as&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;/voice&amp;gt;&amp;lt;voice name=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">en-US-JennyNeural&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;&amp;lt;mstts:express-as style=&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">newscast&lt;/span>&lt;span class="se">\&amp;#34;&lt;/span>&lt;span class="s2">&amp;gt;And I&amp;#39;m Jenny. Here are your headlines for today.&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">bloblist&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">container_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">list_blobs&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="k">for&lt;/span> &lt;span class="n">blob&lt;/span> &lt;span class="ow">in&lt;/span> &lt;span class="n">bloblist&lt;/span>&lt;span class="p">:&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">logging&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">blob&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">blob_client&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">container_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_blob_client&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">blob&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">name&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">downloader&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">blob_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">download_blob&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">max_concurrency&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">encoding&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;UTF-8&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">blob_text&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">downloader&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">readall&lt;/span>&lt;span class="p">()&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">blob_text_json&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">json&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">loads&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">blob_text&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ssml_string&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="s2">&amp;#34;The next article is entitled &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">blob_text_json&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;title&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s2">&amp;#34; and was published on &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">blob_text_json&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;author&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s2">&amp;#34;. Here is the summary &amp;#34;&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">blob_text_json&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;summary&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">ssml_string&lt;/span> &lt;span class="o">+=&lt;/span> &lt;span class="s1">&amp;#39;&amp;lt;/mstts:express-as&amp;gt;&amp;lt;s /&amp;gt;&amp;lt;/voice&amp;gt;&amp;lt;voice name=&amp;#34;en-US-GuyNeural&amp;#34;&amp;gt;&amp;lt;mstts:express-as style=&amp;#34;newscast&amp;#34;&amp;gt;Thanks Jenny. That&lt;/span>&lt;span class="se">\&amp;#39;&lt;/span>&lt;span class="s1">s all from the news desk today. Thanks for listening and have a great day.&amp;lt;/mstts:express-as&amp;gt;&amp;lt;/voice&amp;gt;&amp;lt;/speak&amp;gt;&amp;#39;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">speech_config&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speechsdk&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">SpeechConfig&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">subscription&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">speech_key&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">region&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">service_region&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">speech_synthesizer&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speechsdk&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">SpeechSynthesizer&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">speech_config&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">speech_config&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">audio_config&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">None&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">result&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">speech_synthesizer&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">speak_ssml&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ssml_string&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">audio_data&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">result&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">audio_data&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mp3upload&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">blob_service_client&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">get_blob_client&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">container&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">today&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">blob&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">today&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="s1">&amp;#39;.mp3&amp;#39;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">mp3upload&lt;/span>&lt;span class="o">.&lt;/span>&lt;span class="n">upload_blob&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">audio_data&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">overwrite&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="kc">True&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">content_settings&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="n">ContentSettings&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">content_type&lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="s1">&amp;#39;audio/mpeg&amp;#39;&lt;/span>&lt;span class="p">))&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="conclusion">Conclusion
+&lt;/h2>&lt;p>I hope this article gives you to confidence and some ideas on how you can use SSML with Azure AI Speech service. I am really enjoying learning about Azure AI Speech service and SSML and I am looking forward to using it more in the future.&lt;/p>
+&lt;p>I hope you found this post useful. If you have any questions, feel free to reach out to me on &lt;a class="link" href="https://twitter.com/fredderf204" target="_blank" rel="noopener"
+>Twitter&lt;/a> or &lt;a class="link" href="https://www.linkedin.com/in/1michaelfriedrich/" target="_blank" rel="noopener"
+>Linkedin&lt;/a>.&lt;/p></description></item></channel></rss>

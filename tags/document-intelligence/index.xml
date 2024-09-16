@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Document Intelligence on MF Azure Blog</title><link>https://mfblog.au/tags/document-intelligence/</link><description>Recent content in Document Intelligence on MF Azure Blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 24 Mar 2024 15:23:32 +1100</lastBuildDate><atom:link href="https://mfblog.au/tags/document-intelligence/index.xml" rel="self" type="application/rss+xml"/><item><title>Automated document processing and fraud detection with Azure</title><link>https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/</link><pubDate>Sun, 24 Mar 2024 15:23:32 +1100</pubDate><guid>https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/</guid><description>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/cover.jpg" alt="Featured image of post Automated document processing and fraud detection with Azure" />&lt;blockquote>
+&lt;p>I am a Microsoft employee, but the views expressed here are mine and not those of my employer.&lt;/p>
+&lt;/blockquote>
+&lt;p>I have been working with some clients recently on projects to automate the processing of financial documents. The goal is to extract key information from these documents and then use that information to perform some analysis. The analysis could be anything from fraud detection, risk assessment, summarization, classification, etc.&lt;/p>
+&lt;p>The idea behind this post is to show you how to build a simple document processing pipeline using Azure AI Document Intelligence and Azure Open AI. We will use Azure Document Intelligence to extract key information from the documents and then use Azure Open AI to perform fraud detection on the extracted information.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/1.jpg"
+width="1710"
+height="540"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/1_hu12800091966841298330.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/1_hu18100007618559918295.jpg 1024w"
+loading="lazy"
+alt="Automate document processing by using Azure Form Recognizer - Microsoft defined architecture"
+class="gallery-image"
+data-flex-grow="316"
+data-flex-basis="760px"
+>&lt;/p>
+&lt;h2 id="tldr">TLDR
+&lt;/h2>&lt;ul>
+&lt;li>Microsoft already has a defined architecture for automating document processing by using Azure AI Document Intelligence here - &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/architecture/ai-ml/architecture/automate-document-processing-azure-form-recognizer" target="_blank" rel="noopener"
+>Automate document processing by using Azure Form Recognizer&lt;/a> and above :)&lt;/li>
+&lt;li>Azure AI Document Intelligence is the new name for Azure Form Recognizer.&lt;/li>
+&lt;li>Azure AI Document Intelligence is an AI service that applies advanced machine learning to extract text, key-value pairs, tables, and structures from documents automatically and accurately.&lt;/li>
+&lt;li>I have created a working example of how to use Azure AI Document Intelligence, Azure Open AI, Azure Functions and Python to process financial documents in &lt;a class="link" href="https://github.com/fredderf204/doc-intel-fraud" target="_blank" rel="noopener"
+>this GitHub repo&lt;/a>.&lt;/li>
+&lt;li>This process can preform fraud detection process on the extracted information from the documents.&lt;/li>
+&lt;/ul>
+&lt;h2 id="introduction">Introduction
+&lt;/h2>&lt;p>The sample I have created will focus on Extraction and Enrichment sections of the above diagram, centred around a financial company who needs to process online applications that have Invoices and Receipts as part of the application process. Please see my diagram below for a high-level overview of the process.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/2.png"
+width="810"
+height="543"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/2_hu13791733744548564041.png 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/2_hu1863667293790782830.png 1024w"
+loading="lazy"
+alt="Michaels Sample"
+class="gallery-image"
+data-flex-grow="149"
+data-flex-basis="358px"
+>&lt;/p>
+&lt;ol>
+&lt;li>Customers use the financial company&amp;rsquo;s application to apply for a rebate/loan. The application has been coded in Python with &lt;a class="link" href="https://www.gradio.app/" target="_blank" rel="noopener"
+>Gradio&lt;/a> to create a quick user interface.&lt;/li>
+&lt;li>The application form data is sent to Azure CosmosDB for storage.&lt;/li>
+&lt;li>The Invoice and Receipt are sent to Azure Blob Storage.&lt;/li>
+&lt;li>An Azure Function is triggered by the new documents in the Blob Storage container and sends the documents to Azure AI Document Intelligence for processing. The function uses the pre-built Invoice and Receipt model.&lt;/li>
+&lt;li>Azure AI Document Intelligence process the Invoice and Receipt and sends the extracted information to Azure CosmosDB for storage.&lt;/li>
+&lt;li>An Azure Function is trigger and sends the Invoice and Receipt data to Azure Open AI for fraud detection. The results are sent to Azure CosmosDB for storage. The Invoice and Receipt documents are moved to a new container in Azure Blob Storage called &lt;code>processed&lt;/code>.&lt;/li>
+&lt;/ol>
+&lt;h2 id="1-rebateloan-application">1. Rebate/Loan Application
+&lt;/h2>&lt;p>The application has been coded in Python with &lt;a class="link" href="https://www.gradio.app/" target="_blank" rel="noopener"
+>Gradio&lt;/a> to create a quick user interface. Applicants can fill in their details and attach an invoice and receipt to start the process. The application form data is sent to Azure CosmosDB for storage. The code for this can be found in &lt;a class="link" href="https://github.com/fredderf204/doc-intel-fraud" target="_blank" rel="noopener"
+>this GitHub Repo&lt;/a>.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/3.jpg"
+width="1487"
+height="799"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/3_hu18141170329348352648.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/3_hu4248482215198591236.jpg 1024w"
+loading="lazy"
+alt="Application"
+class="gallery-image"
+data-flex-grow="186"
+data-flex-basis="446px"
+>&lt;/p>
+&lt;h2 id="2-azure-cosmosdb">2. Azure CosmosDB
+&lt;/h2>&lt;p>This is a vanilla Azure CosmosDB setup where I just accepted the defaults. I have created a database called &lt;code>ToDoItems&lt;/code> and two containers called &lt;code>docs&lt;/code> and &lt;code>leases&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>Side Note: I only used &lt;code>ToDoItems&lt;/code> and &lt;code>docs&lt;/code> and the database and container names because I was following a quick start guide. You should use more meaningful names for your project.&lt;/p>
+&lt;/blockquote>
+&lt;p>The &lt;code>leases&lt;/code> container was created so I can use the &lt;a class="link" href="https://docs.microsoft.com/en-us/azure/cosmos-db/change-feed-processor" target="_blank" rel="noopener"
+>Change Feed Processor&lt;/a> to trigger the Azure Function when new documents are added to the Invoice and Receipt containers.&lt;/p>
+&lt;h2 id="3-azure-blob-storage">3. Azure Blob Storage
+&lt;/h2>&lt;p>I have created two containers in Azure Blob Storage called &lt;code>docs&lt;/code> and &lt;code>processed&lt;/code>. The Invoice and Receipt documents are sent to the &lt;code>invoice&lt;/code> and &lt;code>receipt&lt;/code> containers respectively. When Invoice and Receipt documents have been processed, they are moved to a new container in Azure Blob Storage called &lt;code>processed&lt;/code>.&lt;/p>
+&lt;h2 id="4-azure-functions">4. Azure Functions
+&lt;/h2>&lt;p>I have created three Azure Functions, one for invoices and receipts and one for fraud detection. The invoice and receipt function is triggered by the new documents in the &lt;code>invoice&lt;/code> and &lt;code>receipt&lt;/code> containers respectively. The functions sends the documents to Azure AI Document Intelligence for processing and results are sent to Azure CosmosDB for storage.&lt;/p>
+&lt;p>The code for all of these functions can be found in this &lt;a class="link" href="https://github.com/fredderf204/doc-intel-fraud" target="_blank" rel="noopener"
+>GitHub Repo&lt;/a>.&lt;/p>
+&lt;blockquote>
+&lt;p>Side Note: I used the &lt;a class="link" href="https://techcommunity.microsoft.com/t5/azure-compute-blog/azure-functions-v2-python-programming-model-is-generally/ba-p/3827474" target="_blank" rel="noopener"
+>Function v2 model for Python&lt;/a>, which uses the new decorator model. I found it easier to use than the old model and loved having all three functions and there triggers in the same file.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="5-azure-ai-document-intelligence">5. Azure AI Document Intelligence
+&lt;/h2>&lt;p>I am using the pre-built Invoice and Receipt models that are available in Azure AI Document Intelligence for this sample project, because they fit my needs. If you have other types of documents, you can create your own custom models.&lt;/p>
+&lt;p>There is a &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/document-intelligence/concept-custom?view=doc-intel-4.0.0" target="_blank" rel="noopener"
+>great article here&lt;/a> which takes you everything you need to know about customer models. There is an extract below;&lt;/p>
+&lt;p>&lt;code>Custom models now include custom classification models for scenarios where you need to identify the document type prior to invoking the extraction model. Classifier models are available starting with the 2023-07-31 (GA) API. A classification model can be paired with a custom extraction model to analyze and extract fields from forms and documents specific to your business to create a document processing solution. Standalone custom extraction models can be combined to create composed models.&lt;/code>&lt;/p>
+&lt;p>In my example, Azure AI Document Intelligence receives an API call from the Azure Function and sends the document to the pre-built Invoice or Receipt model for processing. The results are sent to Azure CosmosDB for storage.&lt;/p>
+&lt;p>I also store the confidence score of the extraction in the CosmosDB. This is important because I want to know how confident the model is in the extraction. If the confidence score is low, I may want to send the document to a human for review.&lt;/p>
+&lt;blockquote>
+&lt;p>I also store the content JSON response from the Azure AI Document Intelligence API in the CosmosDB. This will be useful for the enrichment process :)&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/4.jpg"
+width="1644"
+height="893"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/4_hu1851309753433880767.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/4_hu12221881119683215881.jpg 1024w"
+loading="lazy"
+alt="Data stored in CosmosDB"
+class="gallery-image"
+data-flex-grow="184"
+data-flex-basis="441px"
+>&lt;/p>
+&lt;h2 id="6-azure-open-ai">6. Azure Open AI
+&lt;/h2>&lt;p>Now where does Azure Open AI come into this? Azure Open AI and generative AI can do many many things and there are many use cases for it within the financial industry. For my example, I chosen to create a fraud detection process.&lt;/p>
+&lt;p>Now this process is not designed to replace the human process, or the humans involved in fraud detection. It is design to make it easier for humans to do their job. I.e. flag certain applications as potentially fraudulent, record why Azure Open AI thinks it&amp;rsquo;s fraudulent and then have a human review them.&lt;/p>
+&lt;p>I have created a separate Azure Function for fraud detection. This function is triggered when a CosmosDB record (an application) has had both their Invoice and Receipt processed by Azure AI Document Intelligence. The function then sends the Invoice and Receipt data to Azure Open AI for fraud detection. The results are sent to Azure CosmosDB for storage.&lt;/p>
+&lt;p>For example, below is screen shot of a record in the CosmosDB. The &lt;code>comparison&lt;/code> field is the result of the fraud detection process.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/5.jpg"
+width="1681"
+height="896"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/5_hu17521879924200007304.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/5_hu16188623258158251373.jpg 1024w"
+loading="lazy"
+alt="Data stored in CosmosDB"
+class="gallery-image"
+data-flex-grow="187"
+data-flex-basis="450px"
+>&lt;/p>
+&lt;p>I have pasted below the full text below;&lt;/p>
+&lt;p>&amp;ldquo;The invoice and receipt do match. Here are the reasons why they match:&lt;/p>
+&lt;ul>
+&lt;li>Both the invoice and receipt are from the same company, Contoso Ltd., and share the same company address and phone number.&lt;/li>
+&lt;li>The invoice and receipt have the same total amount due, $2624.99.&lt;/li>
+&lt;li>Both documents list the same quantity and description of items sold: 20 Solar Panels.&lt;/li>
+&lt;li>The itemized prices match, with a unit price of $130 and a total price for the items being $2600.00.&lt;/li>
+&lt;li>Shipping and handling costs are the same on both documents, $24.99.&lt;/li>
+&lt;li>The invoice and receipt both reflect no sales tax being added.&lt;/li>
+&lt;li>The receipt acknowledges payment being made via a credit card, which implies that the amount due on the invoice has been settled.&lt;/li>
+&lt;li>The salesperson&amp;rsquo;s name, Suman, is mentioned on both the invoice and receipt, supporting their correlation.&lt;/li>
+&lt;/ul>
+&lt;p>Thus, the matching details on both documents confirm that the invoice and receipt correspond to the same transaction.&amp;rdquo;&lt;/p>
+&lt;p>The example is from a legitimate submission where the invoice and receipt do match. So if I was a claims processor, I would be happy to see this response and this would provide me with the confidence to approve the application.&lt;/p>
+&lt;p>I am using the Azure Open AI &lt;a class="link" href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/completions" target="_blank" rel="noopener"
+>completion endpoint&lt;/a> and the system prompt I am using in my Azure Open AI request is;&lt;/p>
+&lt;p>&lt;code>You are an AI assistant that helps audit invoices and receipts to make sure match. If the invoice and receipt do not match, state they do not match. Then explain the reasons why they do not match in bullet point form. If the invoice and receipt do match, state they match. Then explain the reasons why they do match in bullet point form.&lt;/code>&lt;/p>
+&lt;h2 id="bringing-it-all-together">Bringing it all together
+&lt;/h2>&lt;p>From the perspective of the financial company, I have created another UI in &lt;a class="link" href="https://www.gradio.app/" target="_blank" rel="noopener"
+>Gradio&lt;/a> and the code can be found in &lt;a class="link" href="https://github.com/fredderf204/doc-intel-fraud" target="_blank" rel="noopener"
+>this GitHub Repo&lt;/a> called processor demo. This UI allows the financial company to view the applications that have been submitted and the results of the fraud detection process, as below;&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/6.jpg"
+width="1518"
+height="896"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/6_hu11925784037770017706.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/6_hu10075897167200069349.jpg 1024w"
+loading="lazy"
+alt="Processor Demo"
+class="gallery-image"
+data-flex-grow="169"
+data-flex-basis="406px"
+>&lt;/p>
+&lt;p>The claims processor can lookup a application number and view the details of the application. They can see the full extracted data from both the Invoice and Receipt, and the results of the fraud detection process in the comparison field.&lt;/p>
+&lt;p>&lt;img src="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/7.jpg"
+width="1349"
+height="757"
+srcset="https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/7_hu8819328398270841926.jpg 480w, https://mfblog.au/p/automated-document-processing-and-fraud-detection-with-azure/7_hu12126646622864392267.jpg 1024w"
+loading="lazy"
+alt="Processor Demo"
+class="gallery-image"
+data-flex-grow="178"
+data-flex-basis="427px"
+>&lt;/p>
+&lt;p>This will allow the claims processor to make an informed decision on whether to approve or reject the application.&lt;/p>
+&lt;blockquote>
+&lt;p>For bonus points, because I also have the processed documents URI stored in CosmosDB, I could also display the invoice and receipt in the &lt;a class="link" href="https://www.gradio.app/" target="_blank" rel="noopener"
+>Gradio&lt;/a> UI, so as the claims processor is reading the comparison commentary produced by Azure Open AI, they can view the documents side by side.&lt;/p>
+&lt;/blockquote>
+&lt;h2 id="conclusion">Conclusion
+&lt;/h2>&lt;p>I hope this post has given you an insight into how you can use Azure AI Document Intelligence and Azure Open AI to automate the processing of financial documents. The sample I have created is just a starting point and there are many other use cases for these services.&lt;/p></description></item></channel></rss>
